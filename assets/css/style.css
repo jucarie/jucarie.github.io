@@ -128,6 +128,15 @@ h6 {
     - Utilities
 ----------------------------------------------------------------- */
 
+
+#logo-text h2 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+
+
 [data-bs-theme=dark] .text-dark {
     color: rgba(var(--bs-white-rgb), var(--bs-text-opacity)) !important;
 }
