@@ -74,12 +74,11 @@
     </div>
 
     <script>
-
         document.getElementById('btnUp').addEventListener('click', () => moveCharacter(0, -1, images.characterN));
         document.getElementById('btnDown').addEventListener('click', () => moveCharacter(0, 1, images.characterS));
         document.getElementById('btnLeft').addEventListener('click', () => moveCharacter(-1, 0, images.characterW));
         document.getElementById('btnRight').addEventListener('click', () => moveCharacter(1, 0, images.characterE));
-
+    
         const TILE_SIZE = 32;
         const maze = [
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
@@ -93,22 +92,20 @@
             [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
         ];
-
-
-
+    
         const MAZE_ROWS = maze.length;
         const MAZE_COLS = maze[0].length;
-
+    
         const staticCanvas = document.getElementById('staticCanvas');
         const mazeCtx = staticCanvas.getContext('2d');
         const dynamicCanvas = document.getElementById('dynamicCanvas');
         const dynamicCtx = dynamicCanvas.getContext('2d');
-
+    
         staticCanvas.width = MAZE_COLS * TILE_SIZE;
         staticCanvas.height = MAZE_ROWS * TILE_SIZE;
         dynamicCanvas.width = MAZE_COLS * TILE_SIZE;
         dynamicCanvas.height = MAZE_ROWS * TILE_SIZE;
-
+    
         const images = {
             floor: new Image(),
             wall: new Image(),
@@ -119,29 +116,30 @@
             characterW: new Image(),
             end: new Image()
         };
-
+    
         images.floor.src = 'https://jucarie.github.io/img/floor.png';
         images.wall.src = 'https://jucarie.github.io/img/wall.png';
-        images.turret.src = 'https://jucarie.github.io/img/turret.png';
         images.characterN.src = 'https://jucarie.github.io/img/character_up.png';
         images.characterE.src = 'https://jucarie.github.io/img/character_right.png';
         images.characterS.src = 'https://jucarie.github.io/img/character_downT.png';
         images.characterW.src = 'https://jucarie.github.io/img/character_left.png';
         images.end.src = 'https://jucarie.github.io/img/end.png';
-
+        images.turret.src = 'https://jucarie.github.io/img/turret.png';
+    
         let character;
         let characterImage = images.characterS;
         let dynamicElements = [];
-
-
+    
         function init() {
             generateMaze();
         }
-
+    
         function generateMaze() {
             let imagesLoaded = 0;
-            const requiredImages = [images.floor, images.wall, images.end];
-
+            const requiredImages = [
+                images.floor, images.wall, images.end,
+                images.characterN, images.characterE, images.characterS, images.characterW
+            ];
             requiredImages.forEach((image) => {
                 image.onload = () => {
                     imagesLoaded++;
@@ -156,153 +154,133 @@
                 }
             });
         }
-
+    
         function drawStaticMaze() {
             const mazeImage = document.createElement('canvas');
             mazeImage.width = TILE_SIZE * MAZE_COLS;
             mazeImage.height = TILE_SIZE * MAZE_ROWS;
             const mazeImageCtx = mazeImage.getContext('2d');
-
-            // Define mappings of cell values to images
+    
             const cellImages = {
                 1: images.floor,
                 2: images.wall,
                 4: images.floor,
                 9: images.end
             };
-
+    
             maze.forEach((row, rowIndex) => {
                 row.forEach((cell, colIndex) => {
-                    // Check if cell value exists in cellImages
                     if (cellImages[cell]) {
                         mazeImageCtx.drawImage(cellImages[cell], colIndex * TILE_SIZE, rowIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     }
-                    // Skip drawing for transparent cells or undefined values
                 });
             });
-
+    
             mazeCtx.drawImage(mazeImage, 0, 0);
         }
-
+    
         function initDynElementsPosition() {
             maze.forEach((row, rowIndex) => {
                 row.forEach((cell, colIndex) => {
                     if (cell === 4) {
                         character = { x: colIndex, y: rowIndex };
                     } else if (cell >= 30 && cell <= 33) {
-                        const directionMap = {30: 0, 31: 2, 32: 3, 33: 1}; // Up, Down, Left, Right
-                        dynamicElements.push(createTurret(colIndex, rowIndex, directionMap[cell]));
+                        const directionMap = {30: 0, 31: 2, 32: 3, 33: 1};
+                        dynamicElements.push(createSimpleTurret(colIndex, rowIndex, directionMap[cell]));
                     }
                 });
             });
         }
-
-        function createTurret(x, y, direction) {
+    
+        function createSimpleTurret(x, y, direction) {
             return {
                 type: 'turret',
                 x: x,
                 y: y,
                 direction: direction,
                 
-                draw: function() {
-                    if (isImageLoaded(images.turret)) {
-                        dynamicCtx.drawImage(images.turret, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                        this.drawLaserBeam();
-                    } else {
-                        images.turret.onload = () => {
-                            console.log("ReDrawing")
-                            drawDynamicLayer();
-                        } 
-                    }          
-                },
-                update: function() {
-                    this.direction = (this.direction + 1) % 4;
-                },
-                drawLaserBeam: function() {
-                    const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N, E, S, W
-                    let [dx, dy] = directions[this.direction];
-                    let x = this.x;
-                    let y = this.y;
-                    dynamicCtx.beginPath();
-                    dynamicCtx.strokeStyle = 'red';
-                    dynamicCtx.lineWidth = 2;
-                    // dynamicCtx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-
-                    // Start from the edge of the turret tile
-                    let startX = (x + 0.5 + dx * 0.5) * TILE_SIZE;
-                    let startY = (y + 0.5 + dy * 0.5) * TILE_SIZE;
-                    dynamicCtx.moveTo(startX, startY);
-
-                    do {
-                        x += dx;
-                        y += dy;
-                    } while (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS && maze[y][x] !== 2);
-
-                    // End at the edge of the last tile
-                    let endX = (x + 0.5 - dx * 0.5) * TILE_SIZE;
-                    let endY = (y + 0.5 - dy * 0.5) * TILE_SIZE;
-                    dynamicCtx.lineTo(endX, endY);
-
-                    dynamicCtx.stroke();
-                },
-                checkCollision: function(x, y) {
-                    const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N, E, S, W
-                    let [dx, dy] = directions[this.direction];
-                    let beamX = this.x;
-                    let beamY = this.y;
-
-                    do {
-                        beamX += dx;
-                        beamY += dy;
-                        if (beamX === x && beamY === y) {
-                            return true;
-                        }
-                    } while (beamX >= 0 && beamX < MAZE_COLS && beamY >= 0 && beamY < MAZE_ROWS && maze[beamY][beamX] !== 2);
-
-                    return false;
-                }
+                draw: drawTurret,
+                update: updateTurret,
+                drawLaserBeam: drawLaserBeam,
+                checkCollision: checkTurretCollision
             };
         }
-        function checkImageLoad(image) {
-            console.log(image.src+ ' : ' +(image.complete && image.naturalHeight !== 0))
-            if (!image.complete && image.naturalHeight == 0) {
-                image.onload = () => {
-                    console.log("Loaded: "+image.src)
-                    return true
-                }
-                image.onerror = () => {
-                    console.error("Cannot load: "+image.src)
-                    return false
-                }
+    
+        function drawTurret() {
+            if (isImageLoaded(images.turret)) {
+                dynamicCtx.drawImage(images.turret, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                this.drawLaserBeam();
             } else {
-                return true
-            }
-            
+                images.turret.onload = () => {
+                    console.log("ReDrawing");
+                    drawDynamicLayer();
+                };
+                images.turret.onerror = () => {
+                    console.error("Turret image not found");
+                };
+            }          
         }
-
+    
+        function updateTurret() {
+            this.direction = (this.direction + 1) % 4;
+        }
+    
+        function drawLaserBeam() {
+            const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+            let [dx, dy] = directions[this.direction];
+            let x = this.x;
+            let y = this.y;
+            dynamicCtx.beginPath();
+            dynamicCtx.strokeStyle = 'red';
+            dynamicCtx.lineWidth = 2;
+    
+            let startX = (x + 0.5 + dx * 0.5) * TILE_SIZE;
+            let startY = (y + 0.5 + dy * 0.5) * TILE_SIZE;
+            dynamicCtx.moveTo(startX, startY);
+    
+            do {
+                x += dx;
+                y += dy;
+            } while (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS && maze[y][x] !== 2);
+    
+            let endX = (x + 0.5 - dx * 0.5) * TILE_SIZE;
+            let endY = (y + 0.5 - dy * 0.5) * TILE_SIZE;
+            dynamicCtx.lineTo(endX, endY);
+    
+            dynamicCtx.stroke();
+        }
+    
+        function checkTurretCollision(x, y) {
+            const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+            let [dx, dy] = directions[this.direction];
+            let beamX = this.x;
+            let beamY = this.y;
+    
+            do {
+                beamX += dx;
+                beamY += dy;
+                if (beamX === x && beamY === y) {
+                    return true;
+                }
+            } while (beamX >= 0 && beamX < MAZE_COLS && beamY >= 0 && beamY < MAZE_ROWS && maze[beamY][beamX] !== 2);
+    
+            return false;
+        }
+    
         function isImageLoaded(image) {
             return image.complete && image.naturalHeight !== 0;
         }
-
+    
         function drawDynamicLayer() {
             dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);   
-            if (isImageLoaded(characterImage)) {
-                dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            } else {
-                console.log("Failed to load: "+characterImage.src)
-                characterImage.onload = () => {
-                    console.log("Loaded: "+characterImage.src)
-                    dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                }
-            }
-            
+            dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             dynamicElements.forEach(element => element.draw());
         }
-
+    
         function updateTurn() {
             dynamicElements.forEach(element => element.update());
         }
-
+    
         function moveCharacter(dx, dy, newImage) {
             const newX = character.x + dx;
             const newY = character.y + dy;
@@ -317,20 +295,22 @@
                 if (maze[newY][newX] === 9) {
                     showWinModal();
                 } else if (checkCollisions(newX, newY)) {
-                    alert("you lose")
-                    restartGame();
+                    setTimeout(() => { // Important note! This delay is important to draw the drawDynamicLayer()
+                        alert("You lose");
+                        restartGame();
+                    }, 50);
                 }
             }
         }
-
+    
         function isTurret(x, y) {
             return dynamicElements.some(element => element.type === 'turret' && element.x === x && element.y === y);
         }
-
+    
         function checkCollisions(x, y) {
             return dynamicElements.some(element => element.checkCollision && element.checkCollision(x, y));
         }
-
+    
         function restartGame() {
             character = undefined;
             characterImage = images.characterS;
@@ -339,7 +319,7 @@
             initDynElementsPosition();
             drawDynamicLayer();
         }
-
+    
         document.addEventListener('keydown', (event) => {
             const moves = {
                 'ArrowUp': [0, -1, images.characterN],
@@ -351,18 +331,18 @@
                 moveCharacter(...moves[event.key]);
             }
         });
-
+    
         function showWinModal() {
             document.getElementById('modalOverlay').style.display = 'block';
             document.getElementById('winModal').style.display = 'block';
         }
-
+    
         document.getElementById('closeModal').addEventListener('click', () => {
             document.getElementById('modalOverlay').style.display = 'none';
             document.getElementById('winModal').style.display = 'none';
             restartGame()
         });
-
+    
         init();
     </script>
 </body>
