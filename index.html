@@ -281,20 +281,8 @@
         }
 
         function isImageLoaded(image) {
-            console.log(image.src+ ' : ' +(image.complete && image.naturalHeight !== 0))
             return image.complete && image.naturalHeight !== 0;
         }
-        // function drawDynamicLayer() {
-        //     dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
-            
-        //     // Draw character
-        //     dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            
-        //     // Draw dynamic elements
-        //     // dynamicElements.forEach(element => console.log(element));
-        //     // Object { type: "turret", x: 8, y: 2, direction: 2, draw: draw(), update: update(), drawLaserBeam: drawLaserBeam(), checkCollision: checkCollision(x, y) }
-        //     dynamicElements.forEach(element => element.draw());
-        // }
 
         function drawDynamicLayer() {
             dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);   
