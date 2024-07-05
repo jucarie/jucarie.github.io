@@ -203,13 +203,17 @@
                 x: x,
                 y: y,
                 direction: direction,
+                
                 draw: function() {
-                    if (images.turret.complete) {
+                    if (isImageLoaded(images.turret)) {
                         dynamicCtx.drawImage(images.turret, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                         this.drawLaserBeam();
                     } else {
-                    alert("Please refresh! Code 211")
-                    }                        
+                        images.turret.onload = () => {
+                            console.log("ReDrawing")
+                            drawDynamicLayer();
+                        } 
+                    }          
                 },
                 update: function() {
                     this.direction = (this.direction + 1) % 4;
@@ -259,7 +263,27 @@
                 }
             };
         }
+        function checkImageLoad(image) {
+            console.log(image.src+ ' : ' +(image.complete && image.naturalHeight !== 0))
+            if (!image.complete && image.naturalHeight == 0) {
+                image.onload = () => {
+                    console.log("Loaded: "+image.src)
+                    return true
+                }
+                image.onerror = () => {
+                    console.error("Cannot load: "+image.src)
+                    return false
+                }
+            } else {
+                return true
+            }
+            
+        }
 
+        function isImageLoaded(image) {
+            console.log(image.src+ ' : ' +(image.complete && image.naturalHeight !== 0))
+            return image.complete && image.naturalHeight !== 0;
+        }
         // function drawDynamicLayer() {
         //     dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
             
@@ -273,16 +297,17 @@
         // }
 
         function drawDynamicLayer() {
-            dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
-            
-            // Check if characterImage is loaded
-            if (characterImage.complete) {
+            dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);   
+            if (isImageLoaded(characterImage)) {
                 dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             } else {
-                // Set onload handler to draw the character once the image is loaded
-                alert("Please refresh! Code 279")
+                console.log("Failed to load: "+characterImage.src)
+                characterImage.onload = () => {
+                    console.log("Loaded: "+characterImage.src)
+                    dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                }
             }
-            // Draw dynamic elements
+            
             dynamicElements.forEach(element => element.draw());
         }
 
