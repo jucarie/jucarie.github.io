@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>2D Maze Game with Dynamic Enemies</title>
+    <style>
+        body {
+            background-color: black;
+        }
+        canvas {
+            border: 1px solid black;
+        }
+        .map {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        #winModal {
+            display: none;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border: 2px solid black;
+            z-index: 1000;
+        }
+        #modalOverlay {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .controls div {
+            margin: 5px;
+        }
+        .controls button {
+            width: 60px;
+            height: 60px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="staticCanvas" class="map"></canvas>
+    <canvas id="dynamicCanvas" class="map"></canvas>
+    <div id="modalOverlay"></div>
+    <div id="winModal">
+        <h1>You Won!</h1>
+        <button id="closeModal">Close</button>
+    </div>
+
+    <div class="controls">
+        <div>
+            <button id="btnUp">^</button>
+        </div>
+        <div>
+            <button id="btnLeft"><</button>
+            <button id="btnDown">_</button>
+            <button id="btnRight">></button>
+        </div>
+    </div>
+
+
+    <script>
+    function generateMaze(width, height) {
+        // Initialize the maze with walls
+        let maze = Array(height).fill().map(() => Array(width).fill(2));
+
+        // Define directions: [dx, dy]
+        const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+
+        function carve(x, y) {
+            maze[y][x] = 1; // Mark current cell as path
+
+            // Shuffle directions
+            let shuffledDirections = directions.sort(() => Math.random() - 0.5);
+
+            for (let [dx, dy] of shuffledDirections) {
+                let nx = x + dx * 2;
+                let ny = y + dy * 2;
+
+                if (nx >= 0 && nx < width && ny >= 0 && ny < height && maze[ny][nx] === 2) {
+                    maze[y + dy][x + dx] = 0; // Carve passage
+                    carve(nx, ny); // Recursively carve from next cell
+                }
+            }
+        }
+
+        // Start carving from a random point
+        carve(Math.floor(Math.random() * Math.floor((width-1)/2)) * 2 + 1, 
+            Math.floor(Math.random() * Math.floor((height-1)/2)) * 2 + 1);
+
+        // Ensure start (top-left) and end (bottom-right) are open
+        maze[0][0] = 0;
+        maze[height-1][width-1] = 9; // Exit tile
+
+        // Place random number of turrets (30, 31, 32, 33)
+        const numTurrets = Math.floor(Math.random() * 8) + 2; // Random between 2 to 9 turrets
+        let turretsPlaced = 0;
+
+        while (turretsPlaced < numTurrets) {
+            let x = Math.floor(Math.random() * width);
+            let y = Math.floor(Math.random() * height);
+
+            if (maze[y][x] === 1) {
+                // Place turret in a random direction
+                const turretDirection = Math.floor(Math.random() * 4) + 30;
+                maze[y][x] = turretDirection;
+                turretsPlaced++;
+            }
+        }
+
+        return maze;
+    }
+
+    // Example usage:
+    const mazeWidth = 15;
+    const mazeHeight = 15;
+    const mazee = generateMaze(mazeWidth, mazeHeight);
+    console.log(mazee); // Output the generated maze to console
+
+        
+    
+    </script>
+
+
+
+
+    <script>
+
+        document.getElementById('btnUp').addEventListener('click', () => moveCharacter(0, -1, images.characterN));
+        document.getElementById('btnDown').addEventListener('click', () => moveCharacter(0, 1, images.characterS));
+        document.getElementById('btnLeft').addEventListener('click', () => moveCharacter(-1, 0, images.characterW));
+        document.getElementById('btnRight').addEventListener('click', () => moveCharacter(1, 0, images.characterE));
+
+        const TILE_SIZE = 32;
+        const maze = [
+            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            [2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2],
+            [2, 1, 2, 1, 2, 1, 1, 1, 31, 1, 2],
+            [2, 1, 2, 1, 1, 1, 33, 1, 1, 1, 2],
+            [2, 4, 2, 2, 1, 2, 1, 2, 1, 1, 2],
+            [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
+            [2, 1, 1, 1, 30, 1, 1, 1, 1, 1, 2],
+            [2, 1, 32, 1, 1, 1, 1, 1, 9, 1, 2],
+            [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
+            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+        ];
+
+
+
+        const MAZE_ROWS = maze.length;
+        const MAZE_COLS = maze[0].length;
+
+        const staticCanvas = document.getElementById('staticCanvas');
+        const mazeCtx = staticCanvas.getContext('2d');
+        const dynamicCanvas = document.getElementById('dynamicCanvas');
+        const dynamicCtx = dynamicCanvas.getContext('2d');
+
+        staticCanvas.width = MAZE_COLS * TILE_SIZE;
+        staticCanvas.height = MAZE_ROWS * TILE_SIZE;
+        dynamicCanvas.width = MAZE_COLS * TILE_SIZE;
+        dynamicCanvas.height = MAZE_ROWS * TILE_SIZE;
+
+        const images = {
+            floor: new Image(),
+            wall: new Image(),
+            turret: new Image(),
+            characterN: new Image(),
+            characterE: new Image(),
+            characterS: new Image(),
+            characterW: new Image(),
+            end: new Image()
+        };
+
+        images.floor.src = 'file:///D:/py/jocuri/gasca/v4/img/floor.png';
+        images.wall.src = 'file:///D:/py/jocuri/gasca/v4/img/wall.png';
+        images.turret.src = 'file:///D:/py/jocuri/gasca/v4/img/turret.png';
+        images.characterN.src = 'file:///D:/py/jocuri/gasca/v4/img/character_up.png';
+        images.characterE.src = 'file:///D:/py/jocuri/gasca/v4/img/character_right.png';
+        images.characterS.src = 'file:///D:/py/jocuri/gasca/v4/img/character_downT.png';
+        images.characterW.src = 'file:///D:/py/jocuri/gasca/v4/img/character_left.png';
+        images.end.src = 'file:///D:/py/jocuri/gasca/v4/img/end.png';
+
+        let character;
+        let characterImage = images.characterS;
+        let dynamicElements = [];
+
+
+        function init() {
+            generateMaze();
+        }
+
+        function generateMaze() {
+            let imagesLoaded = 0;
+            const requiredImages = [images.floor, images.wall, images.end];
+
+            requiredImages.forEach((image) => {
+                image.onload = () => {
+                    imagesLoaded++;
+                    if (imagesLoaded === requiredImages.length) {
+                        drawStaticMaze();
+                        initDynElementsPosition();
+                        drawDynamicLayer();
+                    }
+                };
+                image.onerror = () => {
+                    console.error("error loading: " + image.src)
+                }
+            });
+        }
+
+        function drawStaticMaze() {
+            const mazeImage = document.createElement('canvas');
+            mazeImage.width = TILE_SIZE * MAZE_COLS;
+            mazeImage.height = TILE_SIZE * MAZE_ROWS;
+            const mazeImageCtx = mazeImage.getContext('2d');
+
+            // Define mappings of cell values to images
+            const cellImages = {
+                1: images.floor,
+                2: images.wall,
+                4: images.floor,
+                9: images.end
+            };
+
+            maze.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    // Check if cell value exists in cellImages
+                    if (cellImages[cell]) {
+                        mazeImageCtx.drawImage(cellImages[cell], colIndex * TILE_SIZE, rowIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    }
+                    // Skip drawing for transparent cells or undefined values
+                });
+            });
+
+            mazeCtx.drawImage(mazeImage, 0, 0);
+        }
+
+        function initDynElementsPosition() {
+            maze.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    if (cell === 4) {
+                        character = { x: colIndex, y: rowIndex };
+                    } else if (cell >= 30 && cell <= 33) {
+                        const directionMap = {30: 0, 31: 2, 32: 3, 33: 1}; // Up, Down, Left, Right
+                        dynamicElements.push(createTurret(colIndex, rowIndex, directionMap[cell]));
+                    }
+                });
+            });
+        }
+
+        function createTurret(x, y, direction) {
+            return {
+                type: 'turret',
+                x: x,
+                y: y,
+                direction: direction,
+                draw: function() {
+                    dynamicCtx.drawImage(images.turret, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    this.drawLaserBeam();
+                },
+                update: function() {
+                    this.direction = (this.direction + 1) % 4;
+                },
+                drawLaserBeam: function() {
+                    const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N, E, S, W
+                    let [dx, dy] = directions[this.direction];
+                    let x = this.x;
+                    let y = this.y;
+                    dynamicCtx.beginPath();
+                    dynamicCtx.strokeStyle = 'red';
+                    dynamicCtx.lineWidth = 2;
+                    // dynamicCtx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+
+                    // Start from the edge of the turret tile
+                    let startX = (x + 0.5 + dx * 0.5) * TILE_SIZE;
+                    let startY = (y + 0.5 + dy * 0.5) * TILE_SIZE;
+                    dynamicCtx.moveTo(startX, startY);
+
+                    do {
+                        x += dx;
+                        y += dy;
+                    } while (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS && maze[y][x] !== 2);
+
+                    // End at the edge of the last tile
+                    let endX = (x + 0.5 - dx * 0.5) * TILE_SIZE;
+                    let endY = (y + 0.5 - dy * 0.5) * TILE_SIZE;
+                    dynamicCtx.lineTo(endX, endY);
+
+                    dynamicCtx.stroke();
+                },
+                checkCollision: function(x, y) {
+                    const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]]; // N, E, S, W
+                    let [dx, dy] = directions[this.direction];
+                    let beamX = this.x;
+                    let beamY = this.y;
+
+                    do {
+                        beamX += dx;
+                        beamY += dy;
+                        if (beamX === x && beamY === y) {
+                            return true;
+                        }
+                    } while (beamX >= 0 && beamX < MAZE_COLS && beamY >= 0 && beamY < MAZE_ROWS && maze[beamY][beamX] !== 2);
+
+                    return false;
+                }
+            };
+        }
+
+        function drawDynamicLayer() {
+            dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
+            
+            // Draw character
+            dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            
+            // Draw dynamic elements
+            dynamicElements.forEach(element => element.draw());
+        }
+
+        function updateTurn() {
+            dynamicElements.forEach(element => element.update());
+        }
+
+        function moveCharacter(dx, dy, newImage) {
+            const newX = character.x + dx;
+            const newY = character.y + dy;
+            if (newX >= 0 && newX < MAZE_COLS && newY >= 0 && newY < MAZE_ROWS && 
+                maze[newY][newX] !== 2 && 
+                !isTurret(newX, newY)) {
+                character.x = newX;
+                character.y = newY;
+                characterImage = newImage;
+                updateTurn();
+                drawDynamicLayer();
+                if (maze[newY][newX] === 9) {
+                    showWinModal();
+                } else if (checkCollisions(newX, newY)) {
+                    alert("you lose")
+                    restartGame();
+                }
+            }
+        }
+
+        function isTurret(x, y) {
+            return dynamicElements.some(element => element.type === 'turret' && element.x === x && element.y === y);
+        }
+
+        function checkCollisions(x, y) {
+            return dynamicElements.some(element => element.checkCollision && element.checkCollision(x, y));
+        }
+
+        function restartGame() {
+            character = undefined;
+            characterImage = images.characterS;
+            dynamicElements = [];
+            dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
+            initDynElementsPosition();
+            drawDynamicLayer();
+        }
+
+        document.addEventListener('keydown', (event) => {
+            const moves = {
+                'ArrowUp': [0, -1, images.characterN],
+                'ArrowDown': [0, 1, images.characterS],
+                'ArrowLeft': [-1, 0, images.characterW],
+                'ArrowRight': [1, 0, images.characterE]
+            };
+            if (moves[event.key]) {
+                moveCharacter(...moves[event.key]);
+            }
+        });
+
+        function showWinModal() {
+            document.getElementById('modalOverlay').style.display = 'block';
+            document.getElementById('winModal').style.display = 'block';
+        }
+
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('modalOverlay').style.display = 'none';
+            document.getElementById('winModal').style.display = 'none';
+            restartGame()
+        });
+
+        init();
+    </script>
+</body>
+</html>
