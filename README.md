@@ -1,1 +1,0 @@
-# jucarie.github.io
