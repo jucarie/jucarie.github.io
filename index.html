@@ -204,8 +204,12 @@
                 y: y,
                 direction: direction,
                 draw: function() {
-                    dynamicCtx.drawImage(images.turret, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-                    this.drawLaserBeam();
+                    if (images.turret.complete) {
+                        dynamicCtx.drawImage(images.turret, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        this.drawLaserBeam();
+                    } else {
+                    alert("Please refresh! Code 211")
+                    }                        
                 },
                 update: function() {
                     this.direction = (this.direction + 1) % 4;
@@ -256,12 +260,28 @@
             };
         }
 
+        // function drawDynamicLayer() {
+        //     dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
+            
+        //     // Draw character
+        //     dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            
+        //     // Draw dynamic elements
+        //     // dynamicElements.forEach(element => console.log(element));
+        //     // Object { type: "turret", x: 8, y: 2, direction: 2, draw: draw(), update: update(), drawLaserBeam: drawLaserBeam(), checkCollision: checkCollision(x, y) }
+        //     dynamicElements.forEach(element => element.draw());
+        // }
+
         function drawDynamicLayer() {
             dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
             
-            // Draw character
-            dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-            
+            // Check if characterImage is loaded
+            if (characterImage.complete) {
+                dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            } else {
+                // Set onload handler to draw the character once the image is loaded
+                alert("Please refresh! Code 279")
+            }
             // Draw dynamic elements
             dynamicElements.forEach(element => element.draw());
         }
