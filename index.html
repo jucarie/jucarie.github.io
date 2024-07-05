@@ -2,19 +2,26 @@
 <html>
 <head>
     <title>2D Maze Game with Dynamic Enemies</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             background-color: black;
+            margin: 0; /* Remove default margin */
+            overflow: hidden; /* Prevent scrolling */
         }
         canvas {
+            display: block; /* Ensure canvas is displayed as block */
+            margin: auto; /* Center the canvas */
             border: 1px solid black;
         }
         .map {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
         }
-        #winModal {
+        #winModal, #modalOverlay {
             display: none;
             position: fixed;
             left: 50%;
@@ -26,19 +33,20 @@
             z-index: 1000;
         }
         #modalOverlay {
-            display: none;
-            position: fixed;
-            left: 0;
-            top: 0;
+            background: rgba(0,0,0,0.5);
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
+            top: 0;
+            left: 0;
         }
         .controls {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            z-index: 1000;
         }
         .controls div {
             margin: 5px;
@@ -69,71 +77,6 @@
             <button id="btnRight">></button>
         </div>
     </div>
-
-
-    <script>
-    function generateMaze(width, height) {
-        // Initialize the maze with walls
-        let maze = Array(height).fill().map(() => Array(width).fill(2));
-
-        // Define directions: [dx, dy]
-        const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-
-        function carve(x, y) {
-            maze[y][x] = 1; // Mark current cell as path
-
-            // Shuffle directions
-            let shuffledDirections = directions.sort(() => Math.random() - 0.5);
-
-            for (let [dx, dy] of shuffledDirections) {
-                let nx = x + dx * 2;
-                let ny = y + dy * 2;
-
-                if (nx >= 0 && nx < width && ny >= 0 && ny < height && maze[ny][nx] === 2) {
-                    maze[y + dy][x + dx] = 0; // Carve passage
-                    carve(nx, ny); // Recursively carve from next cell
-                }
-            }
-        }
-
-        // Start carving from a random point
-        carve(Math.floor(Math.random() * Math.floor((width-1)/2)) * 2 + 1, 
-            Math.floor(Math.random() * Math.floor((height-1)/2)) * 2 + 1);
-
-        // Ensure start (top-left) and end (bottom-right) are open
-        maze[0][0] = 0;
-        maze[height-1][width-1] = 9; // Exit tile
-
-        // Place random number of turrets (30, 31, 32, 33)
-        const numTurrets = Math.floor(Math.random() * 8) + 2; // Random between 2 to 9 turrets
-        let turretsPlaced = 0;
-
-        while (turretsPlaced < numTurrets) {
-            let x = Math.floor(Math.random() * width);
-            let y = Math.floor(Math.random() * height);
-
-            if (maze[y][x] === 1) {
-                // Place turret in a random direction
-                const turretDirection = Math.floor(Math.random() * 4) + 30;
-                maze[y][x] = turretDirection;
-                turretsPlaced++;
-            }
-        }
-
-        return maze;
-    }
-
-    // Example usage:
-    const mazeWidth = 15;
-    const mazeHeight = 15;
-    const mazee = generateMaze(mazeWidth, mazeHeight);
-    console.log(mazee); // Output the generated maze to console
-
-        
-    
-    </script>
-
-
 
 
     <script>
