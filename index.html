@@ -39,8 +39,10 @@
             top: 0;
             left: 0;
         }
-        .controls {
+        .no_zoom {
             touch-action: manipulation;
+        }
+        .controls {
             position: fixed;
             bottom: 20px;
             width: 100%;
@@ -70,12 +72,12 @@
 
     <div class="controls">
         <div>
-            <button id="btnUp">^</button>
+            <button id="btnUp" class="no_zoom">^</button>
         </div>
         <div>
-            <button id="btnLeft"><</button>
-            <button id="btnDown">_</button>
-            <button id="btnRight">></button>
+            <button id="btnLeft" class="no_zoom"><</button>
+            <button id="btnDown" class="no_zoom">_</button>
+            <button id="btnRight" class="no_zoom">></button>
         </div>
     </div>
 
