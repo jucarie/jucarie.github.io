@@ -144,54 +144,43 @@
         dynamicCanvas.height = staticCanvas.height;
     
         const image = {
-            floor: new Image(),
+            floor: createImage('https://jucarie.github.io/img/floor.png'),
             wall: {
-                normal: new Image(),
-                corner: new Image(),
-                lateral: new Image(),
-                down: new Image()
+                normal: createImage('https://jucarie.github.io/img/wall.png'),
+                corner: createImage('https://jucarie.github.io/img/wall_corner.png'),
+                lateral: createImage('https://jucarie.github.io/img/wall_lateral.png'),
+                down: createImage('https://jucarie.github.io/img/wall_down.png')
             },
-            turret: new Image(),
-            SimpleTurret : {
-                up: new Image(),
-                right: new Image(),
-                down: new Image(),
-                left: new Image()
+            turret: createImage('https://jucarie.github.io/img/turret.png'),
+            simpleTurret: {
+                up: createImage('https://jucarie.github.io/img/turret.png'),
+                right: createImage('https://jucarie.github.io/img/turret.png'),
+                down: createImage('https://jucarie.github.io/img/turret_down.png'),
+                left: createImage('https://jucarie.github.io/img/turret.png')
+            },
+            doubleTurret: {
+                up: createImage('https://jucarie.github.io/img/turret.png'),
+                down: createImage('https://jucarie.github.io/img/turret_down.png')
             },
             character: {
-                up: new Image(),
-                right: new Image(),
-                down: new Image(),
-                left: new Image()
+                up: createImage('https://jucarie.github.io/img/character_up.png'),
+                right: createImage('https://jucarie.github.io/img/character_right.png'),
+                down: createImage('https://jucarie.github.io/img/character_down.png'),
+                left: createImage('https://jucarie.github.io/img/character_left.png')
             },
-            end: new Image()
+            end: createImage('https://jucarie.github.io/img/end.png')
         };
-    
-        image.floor.src = 'https://jucarie.github.io/img/floor.png';
-    
-        image.wall.normal.src = 'https://jucarie.github.io/img/wall.png';
-        image.wall.corner.src = 'https://jucarie.github.io/img/wall_corner.png';
-        image.wall.lateral.src = 'https://jucarie.github.io/img/wall_lateral.png';
-        image.wall.down.src = 'https://jucarie.github.io/img/wall_down.png';
-    
-        image.character.up.src = 'https://jucarie.github.io/img/character_up.png';
-        image.character.right.src = 'https://jucarie.github.io/img/character_right.png';
-        image.character.down.src = 'https://jucarie.github.io/img/character_down.png';
-        image.character.left.src = 'https://jucarie.github.io/img/character_left.png';
-
-        image.SimpleTurret.up.src = 'https://jucarie.github.io/img/turret.png';
-        image.SimpleTurret.right.src = 'https://jucarie.github.io/img/turret.png';
-        image.SimpleTurret.down.src = 'https://jucarie.github.io/img/turret_down.png';
-        image.SimpleTurret.left.src = 'https://jucarie.github.io/img/turret.png';
-    
-        image.end.src = 'https://jucarie.github.io/img/end.png';
-        image.turret.src = 'https://jucarie.github.io/img/turret.png';
     
         let character;
         let characterImage = image.character.down;
         let dynamicElements = [];
   
-        
+        function createImage(src) {
+            const img = new Image();
+            img.src = src;
+            return img;
+        }    
+
         class Turret {
             constructor(x, y, direction) {
                 this.x = x;
@@ -302,30 +291,23 @@
             }
 
             draw() {
-                let turretImage;
-                switch (this.direction) {
-                    case 0: // Up
-                        turretImage = image.SimpleTurret.up;
-                        break;
-                    case 1: // Right
-                        turretImage = image.SimpleTurret.right;
-                        break;
-                    case 2: // Down
-                        turretImage = image.SimpleTurret.down;
-                        break;
-                    case 3: // Left
-                        turretImage = image.SimpleTurret.left;
-                        break;
+                let simpleTurretImage;
+                const imageDirection = {
+                    0: image.simpleTurret.up,
+                    1: image.simpleTurret.right,
+                    2: image.simpleTurret.down,
+                    3: image.simpleTurret.left            
                 }
+                simpleTurretImage = imageDirection[this.direction];
 
-                if (turretImage.complete && turretImage.naturalHeight !== 0) {
-                    dynamicCtx.drawImage(turretImage, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                if (isImageLoaded(simpleTurretImage)) {
+                    dynamicCtx.drawImage(simpleTurretImage, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                     this.drawLaserBeam();
                 } else {
-                    turretImage.onload = () => {
+                    simpleTurretImage.onload = () => {
                         drawDynamicLayer();
                     };
-                    turretImage.onerror = () => {
+                    simpleTurretImage.onerror = () => {
                         console.error("Turret image not found");
                     };
                 }
@@ -341,6 +323,21 @@
                 this.direction = (this.direction + 1) % 2; // Alternates between two directions
             }
 
+            draw() {
+                let doubleturretImage = this.direction === 0 ? image.doubleTurret.up : image.doubleTurret.down;
+
+                if (isImageLoaded(doubleturretImage)) {
+                    dynamicCtx.drawImage(doubleturretImage, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    this.drawLaserBeam();
+                } else {
+                    doubleturretImage.onload = () => {
+                        drawDynamicLayer();
+                    };
+                    doubleturretImage.onerror = () => {
+                        console.error("Double Turret image not found");
+                    };
+                }
+            }
             drawLaserBeam() {
                 const trajectory1 = this.laserTrajectories[this.direction];
                 const trajectory2 = this.laserTrajectories[(this.direction + 2) % 4]; // Opposite direction
