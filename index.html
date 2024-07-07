@@ -78,8 +78,8 @@
         document.getElementById('btnDown').addEventListener('click', () => moveCharacter(0, 1, images.characterS));
         document.getElementById('btnLeft').addEventListener('click', () => moveCharacter(-1, 0, images.characterW));
         document.getElementById('btnRight').addEventListener('click', () => moveCharacter(1, 0, images.characterE));
-    
-        const TILE_SIZE = 32;
+    // 34x46
+        const TILE_SIZE = 42;
         const maze = [
             [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
             [2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2],
@@ -109,6 +109,9 @@
         const images = {
             floor: new Image(),
             wall: new Image(),
+            wallCorner: new Image(),
+            wallDown: new Image(),
+            wallLateral: new Image(),
             turret: new Image(),
             characterN: new Image(),
             characterE: new Image(),
@@ -118,11 +121,18 @@
         };
     
         images.floor.src = 'https://jucarie.github.io/img/floor.png';
+
         images.wall.src = 'https://jucarie.github.io/img/wall.png';
-        images.characterN.src = 'https://jucarie.github.io/img/character_up.png';
-        images.characterE.src = 'https://jucarie.github.io/img/character_right.png';
-        images.characterS.src = 'https://jucarie.github.io/img/character_downT.png';
-        images.characterW.src = 'https://jucarie.github.io/img/character_left.png';
+
+        images.wallCorner.src = 'file:///D:/py/jocuri/gasca/v4/img/wall_corner.png'; // 7
+        images.wallDown.src = 'file:///D:/py/jocuri/gasca/v4/img/wall_down.png'; // 6
+        images.wallLateral.src = 'file:///D:/py/jocuri/gasca/v4/img/wall_lateral.png'; // 5
+
+        images.characterN.src = 'file:///D:/py/jocuri/gasca/v4/img/character_up.png';
+        images.characterE.src = 'file:///D:/py/jocuri/gasca/v4/img/character_right.png';
+        images.characterS.src = 'file:///D:/py/jocuri/gasca/v4/img/character_down.png';
+        images.characterW.src = 'file:///D:/py/jocuri/gasca/v4/img/character_left.png';
+
         images.end.src = 'https://jucarie.github.io/img/end.png';
         images.turret.src = 'https://jucarie.github.io/img/turret.png';
     
@@ -165,6 +175,9 @@
                 1: images.floor,
                 2: images.wall,
                 4: images.floor,
+                5: images.wallLateral,
+                6: images.wallDown,
+                7: images.wallCorner,
                 9: images.end
             };
     
@@ -241,7 +254,11 @@
             do {
                 x += dx;
                 y += dy;
-            } while (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS && maze[y][x] !== 2);
+            } while (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS 
+            && maze[y][x] !== 2
+            && maze[y][x] !== 5
+            && maze[y][x] !== 6
+            );
     
             let endX = (x + 0.5 - dx * 0.5) * TILE_SIZE;
             let endY = (y + 0.5 - dy * 0.5) * TILE_SIZE;
@@ -286,6 +303,8 @@
             const newY = character.y + dy;
             if (newX >= 0 && newX < MAZE_COLS && newY >= 0 && newY < MAZE_ROWS && 
                 maze[newY][newX] !== 2 && 
+                maze[newY][newX] !== 5 && 
+                maze[newY][newX] !== 6 && 
                 !isTurret(newX, newY)) {
                 character.x = newX;
                 character.y = newY;
