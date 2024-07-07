@@ -86,8 +86,9 @@
 <body>
     <div id="gameContainer">
         <div class="canvasContainer">
-            <canvas id="staticCanvas"></canvas>
+            <!-- <canvas id="staticCanvas"></canvas> -->
             <canvas id="dynamicCanvas" class="map"></canvas>
+            <canvas id="dynamicCanvas"></canvas>
         </div>
         <div class="controls">
             <div>
@@ -129,7 +130,7 @@
 
         const MAZE_ROWS = maze.length;
         const MAZE_COLS = maze[0].length;
-    
+
         const staticCanvas = document.getElementById('staticCanvas');
         const mazeCtx = staticCanvas.getContext('2d');
         const dynamicCanvas = document.getElementById('dynamicCanvas');
@@ -137,8 +138,8 @@
     
         staticCanvas.width = MAZE_COLS * TILE_SIZE;
         staticCanvas.height = MAZE_ROWS * TILE_SIZE;
-        dynamicCanvas.width = MAZE_COLS * TILE_SIZE;
-        dynamicCanvas.height = MAZE_ROWS * TILE_SIZE;
+        dynamicCanvas.width = staticCanvas.width;
+        dynamicCanvas.height = staticCanvas.height;
     
         const image = {
             floor: new Image(),
@@ -243,17 +244,48 @@
         }
     
         function createSimpleTurret(x, y, direction) {
-            return {
+            const turret = {
                 type: 'turret',
                 x: x,
                 y: y,
                 direction: direction,
+                laserTrajectories: [],
                 
                 draw: drawTurret,
                 update: updateTurret,
                 drawLaserBeam: drawLaserBeam,
                 checkCollision: checkTurretCollision
             };
+
+            // Calculate laser trajectories for all 4 directions
+            const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+            directions.forEach(dir => {
+                turret.laserTrajectories.push(calculateLaserTrajectory(x, y, dir));
+            });
+
+            return turret;
+        }
+
+        function calculateLaserTrajectory(startX, startY, [dx, dy]) {
+            let x = startX;
+            let y = startY;
+            const trajectory = [];
+
+            do {
+                x += dx;
+                y += dy;
+                if (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS 
+                    && maze[y][x] !== 20 && maze[y][x] !== 21 // Walls
+                    && maze[y][x] !== 22 && maze[y][x] !== 23
+                    && maze[y][x] !== 30 && maze[y][x] !== 31 // Turrets
+                    && maze[y][x] !== 32 && maze[y][x] !== 33) {
+                    trajectory.push({x, y});
+                } else {
+                    break;
+                }
+            } while (true);
+
+            return trajectory;
         }
     
         function drawTurret() {
@@ -275,55 +307,53 @@
             this.direction = (this.direction + 1) % 4;
         }
     
+   
+        function checkTurretCollision(x, y) {
+            return this.laserTrajectories[this.direction].some(point => point.x === x && point.y === y);
+        }
+
         function drawLaserBeam() {
-            const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-            let [dx, dy] = directions[this.direction];
-            let x = this.x;
-            let y = this.y;
+            const trajectory = this.laserTrajectories[this.direction];
+            if (trajectory.length === 0) return;
+
             dynamicCtx.beginPath();
             dynamicCtx.strokeStyle = 'red';
             dynamicCtx.lineWidth = 2;
-    
-            let startX = (x + 0.5 + dx * 0.5) * TILE_SIZE;
-            let startY = (y + 0.5 + dy * 0.5) * TILE_SIZE;
+
+            let startX, startY, endX, endY;
+            const lastPoint = trajectory[trajectory.length - 1];
+
+            switch (this.direction) {
+                case 0: // Up
+                    startX = (this.x + 0.5) * TILE_SIZE;
+                    startY = this.y * TILE_SIZE;
+                    endX = startX;
+                    endY = lastPoint.y * TILE_SIZE;
+                    break;
+                case 1: // Right
+                    startX = (this.x + 1) * TILE_SIZE;
+                    startY = (this.y + 0.5) * TILE_SIZE;
+                    endX = (lastPoint.x + 1) * TILE_SIZE;
+                    endY = startY;
+                    break;
+                case 2: // Down
+                    startX = (this.x + 0.5) * TILE_SIZE;
+                    startY = (this.y + 1) * TILE_SIZE;
+                    endX = startX;
+                    endY = (lastPoint.y + 1) * TILE_SIZE;
+                    break;
+                case 3: // Left
+                    startX = this.x * TILE_SIZE;
+                    startY = (this.y + 0.5) * TILE_SIZE;
+                    endX = lastPoint.x * TILE_SIZE;
+                    endY = startY;
+                    break;
+            }
+
             dynamicCtx.moveTo(startX, startY);
-    
-            do {
-                x += dx;
-                y += dy;
-            } while (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS 
-            && maze[y][x] !== 20  // Normal wall
-            && maze[y][x] !== 21  // Corner wall
-            && maze[y][x] !== 22  // Lateral wall
-            && maze[y][x] !== 23  // Down wall
-            );
-    
-            let endX = (x + 0.5 - dx * 0.5) * TILE_SIZE;
-            let endY = (y + 0.5 - dy * 0.5) * TILE_SIZE;
             dynamicCtx.lineTo(endX, endY);
-    
+
             dynamicCtx.stroke();
-        }
-    
-        function checkTurretCollision(x, y) {
-            const directions = [[0, -1], [1, 0], [0, 1], [-1, 0]];
-            let [dx, dy] = directions[this.direction];
-            let beamX = this.x;
-            let beamY = this.y;
-
-            do {
-                beamX += dx;
-                beamY += dy;
-                if (beamX === x && beamY === y) {
-                    return true;
-                }
-            } while (beamX >= 0 && beamX < MAZE_COLS && beamY >= 0 && beamY < MAZE_ROWS 
-                    && maze[beamY][beamX] !== 20
-                    && maze[beamY][beamX] !== 21
-                    && maze[beamY][beamX] !== 22
-                    && maze[beamY][beamX] !== 23);
-
-            return false;
         }
     
         function isImageLoaded(image) {
