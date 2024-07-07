@@ -2,12 +2,28 @@
 <html>
 <head>
     <title>2D Maze Game with Dynamic Enemies</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <style>
         body {
             background-color: black;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #gameContainer {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        .canvasContainer {
+            position: relative;
         }
         canvas {
-            border: 1px solid black;
+            border: 1px solid white;
         }
         .map {
             position: absolute;
@@ -42,6 +58,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            margin-left: 20px;
         }
         .controls div {
             margin: 5px;
@@ -51,48 +68,64 @@
             height: 60px;
             font-size: 18px;
         }
+        @media screen and (max-width: 812px) and (orientation: portrait) {
+            body {
+                transform: rotate(-90deg);
+                transform-origin: left top;
+                width: 100vh;
+                height: 100vw;
+                overflow-x: hidden;
+                position: absolute;
+                top: 100%;
+                left: 0;
+            }
+        }
     </style>
 </head>
 <body>
-    <canvas id="staticCanvas" class="map"></canvas>
-    <canvas id="dynamicCanvas" class="map"></canvas>
+    <div id="gameContainer">
+        <div class="canvasContainer">
+            <canvas id="staticCanvas" class="map"></canvas>
+            <canvas id="dynamicCanvas" class="map"></canvas>
+        </div>
+        <div class="controls">
+            <div>
+                <button id="btnUp" class="anti_zoom">^</button>
+            </div>
+            <div>
+                <button id="btnLeft" class="anti_zoom"><</button>
+                <button id="btnDown" class="anti_zoom">v</button>
+                <button id="btnRight" class="anti_zoom">></button>
+            </div>
+        </div>
+    </div>
+
     <div id="modalOverlay"></div>
     <div id="winModal">
         <h1>You Won!</h1>
         <button id="closeModal">Close</button>
     </div>
 
-    <div class="controls">
-        <div>
-            <button id="btnUp" class="anti_zoom">^</button>
-        </div>
-        <div>
-            <button id="btnLeft" class="anti_zoom"><</button>
-            <button id="btnDown" class="anti_zoom">_</button>
-            <button id="btnRight" class="anti_zoom">></button>
-        </div>
-    </div>
-
     <script>
-        document.getElementById('btnUp').addEventListener('click', () => moveCharacter(0, -1, images.characterN));
-        document.getElementById('btnDown').addEventListener('click', () => moveCharacter(0, 1, images.characterS));
-        document.getElementById('btnLeft').addEventListener('click', () => moveCharacter(-1, 0, images.characterW));
-        document.getElementById('btnRight').addEventListener('click', () => moveCharacter(1, 0, images.characterE));
-    // 34x46
+        document.getElementById('btnUp').addEventListener('click', () => moveCharacter(0, -1, image.character.up));
+        document.getElementById('btnDown').addEventListener('click', () => moveCharacter(0, 1, image.character.down));
+        document.getElementById('btnLeft').addEventListener('click', () => moveCharacter(-1, 0, image.character.left));
+        document.getElementById('btnRight').addEventListener('click', () => moveCharacter(1, 0, image.character.right));
+    
         const TILE_SIZE = 42;
         const maze = [
-            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
-            [2, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2],
-            [2, 1, 2, 1, 2, 1, 1, 1, 31, 1, 2],
-            [2, 1, 2, 1, 1, 1, 33, 1, 1, 1, 2],
-            [2, 4, 2, 2, 1, 2, 1, 2, 1, 1, 2],
-            [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
-            [2, 1, 1, 1, 30, 1, 1, 1, 1, 1, 2],
-            [2, 1, 32, 1, 1, 1, 1, 1, 9, 1, 2],
-            [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2],
-            [2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2],
+            [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+            [20, 1, 1, 1, 20, 1, 1, 1, 1, 1, 20],
+            [20, 1, 20, 1, 20, 1, 1, 1, 31, 1, 20],
+            [20, 1, 20, 1, 1, 1, 33, 1, 1, 1, 20],
+            [20, 4, 20, 20, 1, 20, 1, 20, 1, 1, 20],
+            [20, 1, 1, 1, 1, 1, 1, 1, 1, 1, 20],
+            [20, 1, 1, 1, 30, 1, 1, 1, 1, 1, 20],
+            [20, 1, 32, 1, 1, 1, 1, 1, 9, 1, 20],
+            [20, 1, 1, 1, 1, 1, 1, 1, 1, 1, 20],
+            [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
         ];
-    
+
         const MAZE_ROWS = maze.length;
         const MAZE_COLS = maze[0].length;
     
@@ -106,37 +139,41 @@
         dynamicCanvas.width = MAZE_COLS * TILE_SIZE;
         dynamicCanvas.height = MAZE_ROWS * TILE_SIZE;
     
-        const images = {
+        const image = {
             floor: new Image(),
-            wall: new Image(),
-            wallCorner: new Image(),
-            wallDown: new Image(),
-            wallLateral: new Image(),
+            wall: {
+                normal: new Image(),
+                corner: new Image(),
+                lateral: new Image(),
+                down: new Image()
+            },
             turret: new Image(),
-            characterN: new Image(),
-            characterE: new Image(),
-            characterS: new Image(),
-            characterW: new Image(),
+            character: {
+                up: new Image(),
+                right: new Image(),
+                down: new Image(),
+                left: new Image()
+            },
             end: new Image()
         };
     
-        images.floor.src = 'https://jucarie.github.io/img/floor.png';
-
-        images.wall.src = 'https://jucarie.github.io/img/wall.png';
-        images.wallCorner.src = 'https://jucarie.github.io/img/wall_corner.png'; // 7
-        images.wallDown.src = 'https://jucarie.github.io/img/wall_down.png'; // 6
-        images.wallLateral.src = 'https://jucarie.github.io/img/wall_lateral.png'; // 5
-
-        images.characterN.src = 'https://jucarie.github.io/img/character_up.png';
-        images.characterE.src = 'https://jucarie.github.io/img/character_right.png';
-        images.characterS.src = 'https://jucarie.github.io/img/character_down.png';
-        images.characterW.src = 'https://jucarie.github.io/img/character_left.png';
-
-        images.end.src = 'https://jucarie.github.io/img/end.png';
-        images.turret.src = 'https://jucarie.github.io/img/turret.png';
+        image.floor.src = 'https://jucarie.github.io/img/floor.png';
+    
+        image.wall.normal.src = 'https://jucarie.github.io/img/wall.png';
+        image.wall.corner.src = 'https://jucarie.github.io/img/wall_corner.png';
+        image.wall.lateral.src = 'https://jucarie.github.io/img/wall_lateral.png';
+        image.wall.down.src = 'https://jucarie.github.io/img/wall_down.png';
+    
+        image.character.up.src = 'https://jucarie.github.io/img/character_up.png';
+        image.character.right.src = 'https://jucarie.github.io/img/character_right.png';
+        image.character.down.src = 'https://jucarie.github.io/img/character_down.png';
+        image.character.left.src = 'https://jucarie.github.io/img/character_left.png';
+    
+        image.end.src = 'https://jucarie.github.io/img/end.png';
+        image.turret.src = 'https://jucarie.github.io/img/turret.png';
     
         let character;
-        let characterImage = images.characterS;
+        let characterImage = image.character.down;
         let dynamicElements = [];
     
         function init() {
@@ -146,11 +183,11 @@
         function generateMaze() {
             let imagesLoaded = 0;
             const requiredImages = [
-                images.floor, images.wall, images.end,
-                images.characterN, images.characterE, images.characterS, images.characterW
+                image.floor, image.wall.normal, image.end,
+                image.character.up, image.character.right, image.character.down, image.character.left
             ];
-            requiredImages.forEach((image) => {
-                image.onload = () => {
+            requiredImages.forEach((img) => {
+                img.onload = () => {
                     imagesLoaded++;
                     if (imagesLoaded === requiredImages.length) {
                         drawStaticMaze();
@@ -158,8 +195,8 @@
                         drawDynamicLayer();
                     }
                 };
-                image.onerror = () => {
-                    console.error("error loading: " + image.src)
+                img.onerror = () => {
+                    console.error("error loading: " + img.src)
                 }
             });
         }
@@ -169,17 +206,17 @@
             mazeImage.width = TILE_SIZE * MAZE_COLS;
             mazeImage.height = TILE_SIZE * MAZE_ROWS;
             const mazeImageCtx = mazeImage.getContext('2d');
-    
+
             const cellImages = {
-                1: images.floor,
-                2: images.wall,
-                4: images.floor,
-                5: images.wallLateral,
-                6: images.wallDown,
-                7: images.wallCorner,
-                9: images.end
+                1: image.floor,
+                20: image.wall.normal,
+                21: image.wall.corner,
+                22: image.wall.lateral,
+                23: image.wall.down,
+                4: image.floor,
+                9: image.end
             };
-    
+
             maze.forEach((row, rowIndex) => {
                 row.forEach((cell, colIndex) => {
                     if (cellImages[cell]) {
@@ -187,7 +224,7 @@
                     }
                 });
             });
-    
+
             mazeCtx.drawImage(mazeImage, 0, 0);
         }
     
@@ -219,15 +256,15 @@
         }
     
         function drawTurret() {
-            if (isImageLoaded(images.turret)) {
-                dynamicCtx.drawImage(images.turret, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            if (isImageLoaded(image.turret)) {
+                dynamicCtx.drawImage(image.turret, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
                 this.drawLaserBeam();
             } else {
-                images.turret.onload = () => {
+                image.turret.onload = () => {
                     console.log("ReDrawing");
                     drawDynamicLayer();
                 };
-                images.turret.onerror = () => {
+                image.turret.onerror = () => {
                     console.error("Turret image not found");
                 };
             }          
@@ -254,9 +291,10 @@
                 x += dx;
                 y += dy;
             } while (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS 
-            && maze[y][x] !== 2
-            && maze[y][x] !== 5
-            && maze[y][x] !== 6
+            && maze[y][x] !== 20  // Normal wall
+            && maze[y][x] !== 21  // Corner wall
+            && maze[y][x] !== 22  // Lateral wall
+            && maze[y][x] !== 23  // Down wall
             );
     
             let endX = (x + 0.5 - dx * 0.5) * TILE_SIZE;
@@ -271,15 +309,19 @@
             let [dx, dy] = directions[this.direction];
             let beamX = this.x;
             let beamY = this.y;
-    
+
             do {
                 beamX += dx;
                 beamY += dy;
                 if (beamX === x && beamY === y) {
                     return true;
                 }
-            } while (beamX >= 0 && beamX < MAZE_COLS && beamY >= 0 && beamY < MAZE_ROWS && maze[beamY][beamX] !== 2);
-    
+            } while (beamX >= 0 && beamX < MAZE_COLS && beamY >= 0 && beamY < MAZE_ROWS 
+                    && maze[beamY][beamX] !== 20
+                    && maze[beamY][beamX] !== 21
+                    && maze[beamY][beamX] !== 22
+                    && maze[beamY][beamX] !== 23);
+
             return false;
         }
     
@@ -298,28 +340,29 @@
         }
     
         function moveCharacter(dx, dy, newImage) {
-            const newX = character.x + dx;
-            const newY = character.y + dy;
-            if (newX >= 0 && newX < MAZE_COLS && newY >= 0 && newY < MAZE_ROWS && 
-                maze[newY][newX] !== 2 && 
-                maze[newY][newX] !== 5 && 
-                maze[newY][newX] !== 6 && 
-                !isTurret(newX, newY)) {
-                character.x = newX;
-                character.y = newY;
-                characterImage = newImage;
-                updateTurn();
-                drawDynamicLayer();
-                if (maze[newY][newX] === 9) {
-                    showWinModal();
-                } else if (checkCollisions(newX, newY)) {
-                    setTimeout(() => { // Important note! This delay is important to draw the drawDynamicLayer()
-                        alert("You lose");
-                        restartGame();
-                    }, 50);
-                }
+        const newX = character.x + dx;
+        const newY = character.y + dy;
+        if (newX >= 0 && newX < MAZE_COLS && newY >= 0 && newY < MAZE_ROWS && 
+            maze[newY][newX] !== 20 && 
+            maze[newY][newX] !== 21 && 
+            maze[newY][newX] !== 22 && 
+            maze[newY][newX] !== 23 && 
+            !isTurret(newX, newY)) {
+            character.x = newX;
+            character.y = newY;
+            characterImage = newImage;
+            updateTurn();
+            drawDynamicLayer();
+            if (maze[newY][newX] === 9) {
+                showWinModal();
+            } else if (checkCollisions(newX, newY)) {
+                setTimeout(() => {
+                    alert("You lose");
+                    restartGame();
+                }, 50);
             }
         }
+    }
     
         function isTurret(x, y) {
             return dynamicElements.some(element => element.type === 'turret' && element.x === x && element.y === y);
@@ -331,19 +374,19 @@
     
         function restartGame() {
             character = undefined;
-            characterImage = images.characterS;
+            characterImage = image.character.down;
             dynamicElements = [];
             dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);
             initDynElementsPosition();
             drawDynamicLayer();
         }
-    
+  
         document.addEventListener('keydown', (event) => {
             const moves = {
-                'ArrowUp': [0, -1, images.characterN],
-                'ArrowDown': [0, 1, images.characterS],
-                'ArrowLeft': [-1, 0, images.characterW],
-                'ArrowRight': [1, 0, images.characterE]
+                'ArrowUp': [0, -1, image.character.up],
+                'ArrowDown': [0, 1, image.character.down],
+                'ArrowLeft': [-1, 0, image.character.left],
+                'ArrowRight': [1, 0, image.character.right]
             };
             if (moves[event.key]) {
                 moveCharacter(...moves[event.key]);
@@ -361,6 +404,37 @@
             restartGame()
         });
     
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        function handleOrientation() {
+            if (isMobile()) {
+                // The CSS will handle the rotation for mobile devices
+                document.body.style.overflow = 'hidden';
+            } else {
+                // For non-mobile devices, reset any applied styles
+                document.body.style.transform = '';
+                document.body.style.transformOrigin = '';
+                document.body.style.width = '';
+                document.body.style.height = '';
+                document.body.style.position = '';
+                document.body.style.overflow = '';
+            }
+        }
+
+        // Check orientation on page load and resize
+        window.addEventListener('load', handleOrientation);
+        window.addEventListener('resize', handleOrientation);
+
+        // Prevent default touch behavior to avoid zooming
+        document.addEventListener('touchmove', function(event) {
+            if (event.scale !== 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // Initialize the game
         init();
     </script>
 </body>
