@@ -152,6 +152,12 @@
                 down: new Image()
             },
             turret: new Image(),
+            SimpleTurret : {
+                up: new Image(),
+                right: new Image(),
+                down: new Image(),
+                left: new Image()
+            },
             character: {
                 up: new Image(),
                 right: new Image(),
@@ -172,6 +178,11 @@
         image.character.right.src = 'https://jucarie.github.io/img/character_right.png';
         image.character.down.src = 'https://jucarie.github.io/img/character_down.png';
         image.character.left.src = 'https://jucarie.github.io/img/character_left.png';
+
+        image.SimpleTurret.up.src = 'https://jucarie.github.io/img/turret.png';
+        image.SimpleTurret.right.src = 'https://jucarie.github.io/img/turret.png';
+        image.SimpleTurret.down.src = 'https://jucarie.github.io/img/turret_down.png';
+        image.SimpleTurret.left.src = 'https://jucarie.github.io/img/turret.png';
     
         image.end.src = 'https://jucarie.github.io/img/end.png';
         image.turret.src = 'https://jucarie.github.io/img/turret.png';
@@ -288,6 +299,36 @@
 
             update() {
                 this.direction = (this.direction + 1) % 4;
+            }
+
+            draw() {
+                let turretImage;
+                switch (this.direction) {
+                    case 0: // Up
+                        turretImage = image.SimpleTurret.up;
+                        break;
+                    case 1: // Right
+                        turretImage = image.SimpleTurret.right;
+                        break;
+                    case 2: // Down
+                        turretImage = image.SimpleTurret.down;
+                        break;
+                    case 3: // Left
+                        turretImage = image.SimpleTurret.left;
+                        break;
+                }
+
+                if (turretImage.complete && turretImage.naturalHeight !== 0) {
+                    dynamicCtx.drawImage(turretImage, this.x * TILE_SIZE, this.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    this.drawLaserBeam();
+                } else {
+                    turretImage.onload = () => {
+                        drawDynamicLayer();
+                    };
+                    turretImage.onerror = () => {
+                        console.error("Turret image not found");
+                    };
+                }
             }
         }
 
@@ -430,6 +471,10 @@
             dynamicCtx.clearRect(0, 0, dynamicCanvas.width, dynamicCanvas.height);   
             dynamicCtx.drawImage(characterImage, character.x * TILE_SIZE, character.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
             dynamicElements.forEach(element => element.draw());
+        }
+
+        function isImageLoaded(image) {
+            return image.complete && image.naturalHeight !== 0;
         }
 
         function moveCharacter(dx, dy, newImage) {
