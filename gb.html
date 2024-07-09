@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Boy Maze Game</title>
+    <style>
+        body {
+            background-color: #9BA4B5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .gameboy {
+            background-color: #8C9CB1;
+            border-radius: 10px 10px 50px 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+        }
+        .screen-area {
+            background-color: #9EAF8E;
+            border: 20px solid #626F59;
+            border-radius: 10px 10px 30px 10px;
+            margin-bottom: 20px;
+            position: relative;
+            width: 440px;  /* Adjust based on your game size */
+            height: 400px; /* Adjust based on your game size */
+        }
+        .screen-area canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            image-rendering: pixelated;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+        }
+        .d-pad {
+            width: 100px;
+            height: 100px;
+            position: relative;
+        }
+        .d-pad-button {
+            position: absolute;
+            background-color: #3E4652;
+            border: none;
+            cursor: pointer;
+        }
+        #up, #down {
+            width: 30px;
+            height: 40px;
+            left: 35px;
+        }
+        #left, #right {
+            width: 40px;
+            height: 30px;
+            top: 35px;
+        }
+        #up { top: 0; }
+        #down { bottom: 0; }
+        #left { left: 0; }
+        #right { right: 0; }
+        .action-buttons {
+            display: flex;
+            align-items: center;
+        }
+        .action-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #9B1515;
+            border: none;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="gameboy">
+        <div class="screen-area">
+            <canvas id="mazeCanvas"></canvas>
+            <canvas id="dynamicCanvas"></canvas>
+            <canvas id="characterCanvas"></canvas>
+        </div>
+        <div class="controls">
+            <div class="d-pad">
+                <button id="up" class="d-pad-button"></button>
+                <button id="down" class="d-pad-button"></button>
+                <button id="left" class="d-pad-button"></button>
+                <button id="right" class="d-pad-button"></button>
+            </div>
+            <div class="action-buttons">
+                <button id="b" class="action-button"></button>
+                <button id="a" class="action-button"></button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Constants
+        const TILE_SIZE = 40;
+        const MAZE = [
+            [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+            [20, 1, 1, 1, 20, 1, 1, 1, 1, 1, 20],
+            [20, 1, 20, 1, 20, 1, 1, 31, 31, 1, 20],
+            [20, 1, 20, 1, 1, 1, 33, 1, 1, 1, 20],
+            [20, 4, 20, 20, 1, 20, 1, 20, 1, 1, 20],
+            [20, 1, 1, 1, 1, 1, 1, 1, 1, 1, 20],
+            [20, 1, 1, 1, 30, 1, 34, 1, 1, 1, 20],
+            [20, 1, 32, 1, 1, 1, 1, 1, 9, 1, 20],
+            [20, 1, 1, 1, 1, 1, 1, 1, 1, 1, 20],
+            [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20],
+        ];     
+        // const MAZE = [
+        //     [20, 20, 20, 20, 20, 20],
+        //     [20, 4, 1, 1, 1, 20],
+        //     [20, 1, 31, 1, 31, 20],
+        //     [20, 1, 1, 1, 1, 20],
+        //     [20, 1, 1, 1, 9, 20],
+        //     [20, 20, 20, 20, 20, 20], 
+        // ];
+        const IMPASSABLE_TILES = [0, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34, 35, 40, 41];
+        const MAZE_ROWS = MAZE.length;
+        const MAZE_COLS = MAZE[0].length;
+        const TURRET_DIRECTIONS = ["up", "right", "down", "left"];
+
+        // Game state
+        let characterPosition = { x: 1, y: 1 };
+        let characterImage;
+        let framesets = [];
+        let globalFrameCounter = 0;
+        let dynamicObjectsArray = [];
+        const laserBeamCache = {};
+
+        // Canvas setup
+        const canvases = {
+            maze: document.getElementById('mazeCanvas'),
+            dynamic: document.getElementById('dynamicCanvas'),
+            character: document.getElementById('characterCanvas')
+        };
+        const contexts = {
+            maze: canvases.maze.getContext('2d'),
+            dynamic: canvases.dynamic.getContext('2d'),
+            character: canvases.character.getContext('2d')
+        };
+
+        // Image loading
+        const imageUrls = {
+            floor: 'https://jucarie.github.io/img/floor.png',
+            wall: {
+                normal: 'https://jucarie.github.io/img/wall.png',
+                corner: 'https://jucarie.github.io/img/wall_corner.png',
+                lateral: 'https://jucarie.github.io/img/wall_lateral.png',
+                down: 'https://jucarie.github.io/img/wall_down.png'
+            },
+            character: {
+                up: 'https://jucarie.github.io/img/character_up.png',
+                right: 'https://jucarie.github.io/img/character_right.png',
+                down: 'https://jucarie.github.io/img/character_down.png',
+                left: 'https://jucarie.github.io/img/character_left.png'
+            },
+            turret: {
+                up: 'https://jucarie.github.io/img/turret.png',
+                down: 'https://jucarie.github.io/img/turret_down.png',
+                left: 'https://jucarie.github.io/img/turret.png',
+                right: 'https://jucarie.github.io/img/turret.png'
+            },
+            doubleTurret: {
+                horizontal: 'https://jucarie.github.io/img/turret.png', // double_turret_horizontal.png
+                vertical: 'https://jucarie.github.io/img/turret_down.png' // double_turret_vertical.png
+            },
+            end: 'https://jucarie.github.io/img/end.png'
+        };
+
+        const images = {};
+
+        function loadImages() {
+            const promises = [];
+
+            function loadImage(key, url) {
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        images[key] = img;
+                        resolve();
+                    };
+                    img.src = url;
+                });
+            }
+
+            for (const [key, value] of Object.entries(imageUrls)) {
+                if (typeof value === 'string') {
+                    promises.push(loadImage(key, value));
+                } else {
+                    for (const [subKey, subValue] of Object.entries(value)) {
+                        promises.push(loadImage(`${key}_${subKey}`, subValue));
+                    }
+                }
+            }
+
+            return Promise.all(promises);
+        }
+
+        function initCanvases() {
+            Object.values(canvases).forEach(canvas => {
+                canvas.width = MAZE_COLS * TILE_SIZE;
+                canvas.height = MAZE_ROWS * TILE_SIZE;
+            });
+        }
+
+        function initMaze() {
+            const staticImagesTable = {
+                1: images.floor,
+                20: images.wall_normal,
+                21: images.wall_corner,
+                22: images.wall_lateral,
+                23: images.wall_down,
+                9: images.end
+            };
+
+            const dynamicImageTable = {
+                4: true,
+                30: { type: "single", direction: "up" },
+                31: { type: "single", direction: "down" },
+                32: { type: "single", direction: "left" },
+                33: { type: "single", direction: "right" },
+                34: { type: "double", orientation: "vertical" },
+                35: { type: "double", orientation: "horizontal" }
+            };
+
+            dynamicObjectsArray = []; // Clear the array before populating
+
+            MAZE.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    if (staticImagesTable[cell]) {
+                        contexts.maze.drawImage(staticImagesTable[cell], colIndex * TILE_SIZE, rowIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                    } else if (dynamicImageTable[cell]) {
+                        contexts.maze.drawImage(images.floor, colIndex * TILE_SIZE, rowIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        dynamicObjectsArray.push({ 
+                            x: colIndex, 
+                            y: rowIndex, 
+                            ...dynamicImageTable[cell],
+                            id: cell
+                        });
+                    }
+                });
+            });
+        }
+
+        function calculateLaserBeam(turret, direction) {
+            const directionVector = {
+                up: { dx: 0, dy: -1 },
+                down: { dx: 0, dy: 1 },
+                left: { dx: -1, dy: 0 },
+                right: { dx: 1, dy: 0 }
+            }[direction];
+
+            let x = turret.x + directionVector.dx;
+            let y = turret.y + directionVector.dy;
+            const beam = [];
+
+            while (x >= 0 && x < MAZE_COLS && y >= 0 && y < MAZE_ROWS && !IMPASSABLE_TILES.includes(MAZE[y][x])) {
+                beam.push({ x, y });
+                x += directionVector.dx;
+                y += directionVector.dy;
+            }
+
+            return beam;
+        }
+
+        function drawLaserBeam(ctx, turret, direction, beam, color) {
+            if (beam.length > 0) {
+                let startX, startY, endX, endY;
+                const lastPoint = beam[beam.length - 1];
+
+                switch (direction) {
+                    case 'up':
+                        startX = (turret.x + 0.5) * TILE_SIZE;
+                        startY = turret.y * TILE_SIZE;
+                        endX = startX;
+                        endY = lastPoint.y * TILE_SIZE;
+                        break;
+                    case 'down':
+                        startX = (turret.x + 0.5) * TILE_SIZE;
+                        startY = (turret.y + 1) * TILE_SIZE;
+                        endX = startX;
+                        endY = (lastPoint.y + 1) * TILE_SIZE;
+                        break;
+                    case 'left':
+                        startX = turret.x * TILE_SIZE;
+                        startY = (turret.y + 0.5) * TILE_SIZE;
+                        endX = lastPoint.x * TILE_SIZE;
+                        endY = startY;
+                        break;
+                    case 'right':
+                        startX = (turret.x + 1) * TILE_SIZE;
+                        startY = (turret.y + 0.5) * TILE_SIZE;
+                        endX = (lastPoint.x + 1) * TILE_SIZE;
+                        endY = startY;
+                        break;
+                }
+
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
+        function renderSingleTurret(ctx, turret, frameIndex) {
+            const turretDirection = TURRET_DIRECTIONS[(TURRET_DIRECTIONS.indexOf(turret.direction) + frameIndex) % 4];
+            const turretImage = images[`turret_${turretDirection}`];
+            ctx.drawImage(turretImage, turret.x * TILE_SIZE, turret.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+            const beam = calculateLaserBeam(turret, turretDirection);
+            drawLaserBeam(ctx, turret, turretDirection, beam, 'red');
+        }
+ 
+        function renderDoubleTurret(ctx, turret, frameIndex, currentOrientation) {
+            const turretImage = images[`doubleTurret_${currentOrientation}`];
+            ctx.drawImage(turretImage, turret.x * TILE_SIZE, turret.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+            const directions = currentOrientation === "vertical" ? ["up", "down"] : ["left", "right"];
+
+            directions.forEach(direction => {
+                const beam = calculateLaserBeam(turret, direction);
+                drawLaserBeam(ctx, turret, direction, beam, 'green');
+            });
+        }       
+
+
+        function preRenderFrames() {
+            // if (!dynamicObjectsArray || dynamicObjectsArray.length === 0) {
+            //     console.error("dynamicObjectsArray is not initialized or empty");
+            //     return;
+            // }
+            for (let i = 0; i < 4; i++) {
+                const offscreenCanvas = document.createElement('canvas');
+                offscreenCanvas.width = canvases.dynamic.width;
+                offscreenCanvas.height = canvases.dynamic.height;
+                const offscreenCtx = offscreenCanvas.getContext('2d');
+                
+                laserBeamCache[i] = [];
+                
+                dynamicObjectsArray.forEach((object, index) => {
+                    if (object.type === 'single') {
+                        const turretDirection = TURRET_DIRECTIONS[(TURRET_DIRECTIONS.indexOf(object.direction) + i) % 4];
+                        const beam = calculateLaserBeam(object, turretDirection);
+                        laserBeamCache[i][index] = { beam: beam };
+                        
+                        renderSingleTurret(offscreenCtx, object, i);
+                    } else if (object.type === 'double') {
+                        const currentOrientation = i % 2 === 0 ? object.orientation : (object.orientation === "vertical" ? "horizontal" : "vertical");
+                        const directions = currentOrientation === "vertical" ? ["up", "down"] : ["left", "right"];
+                        
+                        laserBeamCache[i][index] = {};
+                        directions.forEach(direction => {
+                            const beam = calculateLaserBeam(object, direction);
+                            laserBeamCache[i][index][direction] = beam;
+                        });
+                        
+                        renderDoubleTurret(offscreenCtx, object, i, currentOrientation);
+                    }
+                });
+                framesets.push(offscreenCanvas);
+            }
+        }
+
+        function drawObjectCanvas() {
+            const characterObject = dynamicObjectsArray.find(obj => obj.id === 4);
+            if (characterObject) {
+                characterPosition = { x: characterObject.x, y: characterObject.y };
+            }
+            contexts.character.clearRect(0, 0, canvases.character.width, canvases.character.height);
+            contexts.character.drawImage(characterImage, characterPosition.x * TILE_SIZE, characterPosition.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+
+            contexts.dynamic.clearRect(0, 0, canvases.dynamic.width, canvases.dynamic.height);
+            contexts.dynamic.drawImage(framesets[globalFrameCounter], 0, 0);
+        }
+
+        function moveCharacter(dx, dy, newImage) {
+            console.log(laserBeamCache,globalFrameCounter)
+            console.log(dynamicObjectsArray)
+            const newX = characterPosition.x + dx;
+            const newY = characterPosition.y + dy;
+
+            if (!IMPASSABLE_TILES.includes(MAZE[newY][newX])) {
+                characterPosition.x = newX;
+                characterPosition.y = newY;
+                
+                // Update the character's position in dynamicObjectsArray
+                const characterObject = dynamicObjectsArray.find(obj => obj.id === 4);
+                // if (characterObject) {
+                //     characterObject.x = newX;
+                //     characterObject.y = newY;
+                // }
+                characterObject.x = newX;
+                characterObject.y = newY;               
+
+                if (characterImage.src != newImage.src) {
+                    characterImage = newImage;
+                }
+                globalFrameCounter = (globalFrameCounter + 1) % 4;
+                drawObjectCanvas();
+
+                if (MAZE[newY][newX] === 9) {
+                    setTimeout(() => {
+                        alert("You won");
+                        characterImage = images.character_down;
+                        init();
+                    }, 50);
+                    return;
+                }
+
+                if (isCharacterHitByLaser()) {
+                    setTimeout(() => {
+                        alert("Game Over! You were hit by a laser.");
+                        characterImage = images.character_down;
+                        init();
+                    }, 50);
+                    return;
+                }
+            }
+        }
+        
+        function isCharacterHitByLaser() {
+            const currentFrame = laserBeamCache[globalFrameCounter];
+            
+            return currentFrame.some((cachedBeam, index) => {
+                const object = dynamicObjectsArray[index];
+                if (object.type === 'single') {
+                    return cachedBeam.beam.some(tile => 
+                        tile.x === characterPosition.x && tile.y === characterPosition.y
+                    );
+                } else if (object.type === 'double') {
+                    return Object.values(cachedBeam).some(beam => 
+                        beam.some(tile => 
+                            tile.x === characterPosition.x && tile.y === characterPosition.y
+                        )
+                    );
+                }
+                return false;
+            });
+        }
+
+
+        function handleKeyDown(event) {
+            const moves = {
+                'ArrowUp': [0, -1, images.character_up],
+                'ArrowDown': [0, 1, images.character_down],
+                'ArrowLeft': [-1, 0, images.character_left],
+                'ArrowRight': [1, 0, images.character_right]
+            };
+            if (moves[event.key]) {
+                moveCharacter(...moves[event.key]);
+            }
+        }
+
+        async function init() {
+            await loadImages();
+            initCanvases();
+            initMaze();
+            preRenderFrames();
+            characterImage = images.character_down;
+            globalFrameCounter = 0;
+            drawObjectCanvas();
+        }
+
+
+
+        document.querySelectorAll('.d-pad-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const key = this.id;
+                const event = new KeyboardEvent('keydown', {
+                    key: key === 'up' ? 'ArrowUp' :
+                         key === 'down' ? 'ArrowDown' :
+                         key === 'left' ? 'ArrowLeft' :
+                         'ArrowRight'
+                });
+                document.dispatchEvent(event);
+            });
+        });
+
+
+
+
+
+        document.addEventListener('keydown', handleKeyDown);
+        window.onload = init;
+    </script>
+</body>
+</html>
