@@ -19,6 +19,9 @@
             border-radius: 10px 10px 50px 10px;
             padding: 20px;
             box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 480px;
+            margin: 10px;
         }
         .screen-area {
             background-color: #9EAF8E;
@@ -26,22 +29,29 @@
             border-radius: 10px 10px 30px 10px;
             margin-bottom: 20px;
             position: relative;
-            width: 440px;  /* Adjust based on your game size */
-            height: 400px; /* Adjust based on your game size */
+            /* width: 100%; */
+            height: auto;
+            padding-bottom: 90%; /* Maintain aspect ratio */
+            overflow: hidden;
         }
+
         .screen-area canvas {
             position: absolute;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
             image-rendering: pixelated;
         }
         .controls {
             display: flex;
             justify-content: space-between;
+            flex-wrap: wrap;
         }
         .d-pad {
-            width: 100px;
-            height: 100px;
+            width: 40%;
+            height: 0;
+            padding-bottom: 40%;
             position: relative;
         }
         .d-pad-button {
@@ -51,30 +61,33 @@
             cursor: pointer;
         }
         #up, #down {
-            width: 30px;
-            height: 40px;
-            left: 35px;
+            width: 30%;
+            height: 40%;
+            left: 35%;
         }
         #left, #right {
-            width: 40px;
-            height: 30px;
-            top: 35px;
+            width: 40%;
+            height: 30%;
+            top: 35%;
         }
         #up { top: 0; }
         #down { bottom: 0; }
         #left { left: 0; }
         #right { right: 0; }
         .action-buttons {
+            width: 40%;
             display: flex;
+            justify-content: center;
             align-items: center;
         }
         .action-button {
-            width: 40px;
-            height: 40px;
+            width: 20%;
+            height: 0;
+            padding-bottom: 20%;
             border-radius: 50%;
             background-color: #9B1515;
             border: none;
-            margin: 0 10px;
+            margin: 0 5%;
             cursor: pointer;
         }
     </style>
