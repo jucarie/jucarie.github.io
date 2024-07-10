@@ -195,7 +195,7 @@
 <body>
     <div class="gameboy">
         <div class="step-counter">Current Steps: <span id="stepCount">0</span></div>
-        <div class="screen-area">
+        <div class="screen-area" onclick="drawCrack()">
             <canvas id="mazeCanvas"></canvas>
             <canvas id="dynamicCanvas"></canvas>
             <canvas id="characterCanvas"></canvas>
@@ -251,6 +251,7 @@
         let globalFrameCounter = 0;
         let stepCount = 0;
         let dynamicObjectsArray = [];
+        let hasCrack = false;
         const laserBeamCache = {};
 
         // Canvas setup
@@ -503,6 +504,7 @@
         }
 
         function moveCharacter(dx, dy, newImage) {
+            hasCrack = false;
             console.log(laserBeamCache,globalFrameCounter)
             console.log(dynamicObjectsArray)
             const newX = characterPosition.x + dx;
@@ -567,6 +569,83 @@
                 return false;
             });
         }
+
+        function drawCrack() {
+            if (hasCrack) return; 
+            const ctx = contexts.character; // Using the character canvas for the crack
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; // Semi-transparent white
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+
+            // Start from a random point on the top edge
+            const startX = Math.random() * canvases.character.width;
+            ctx.moveTo(startX, 0);
+
+            // Create a jagged line down the screen
+            let x = startX;
+            let y = 0;
+            while (y < canvases.character.height) {
+                x += (Math.random() - 0.5) * 20; // Random horizontal movement
+                y += Math.random() * 20 + 10; // Random vertical movement
+                ctx.lineTo(x, y);
+            }
+
+            ctx.stroke();
+            ctx.restore();
+            hasCrack = true;
+        }
+
+
+
+        function drawCrack111() {
+        if (hasCrack) return; // Prevent drawing multiple cracks
+
+        const ctx = contexts.character; // Using the character canvas for the crack
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; // Semi-transparent white
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+
+        // Start from a random point on the edge
+        const side = Math.floor(Math.random() * 4);
+        let startX, startY;
+        switch(side) {
+            case 0: // Top
+                startX = Math.random() * canvases.character.width;
+                startY = 0;
+                break;
+            case 1: // Right
+                startX = canvases.character.width;
+                startY = Math.random() * canvases.character.height;
+                break;
+            case 2: // Bottom
+                startX = Math.random() * canvases.character.width;
+                startY = canvases.character.height;
+                break;
+            case 3: // Left
+                startX = 0;
+                startY = Math.random() * canvases.character.height;
+                break;
+        }
+        ctx.moveTo(startX, startY);
+
+        // Create a jagged line across the screen
+        let x = startX;
+        let y = startY;
+        const endX = canvases.character.width - startX;
+        const endY = canvases.character.height - startY;
+        while (Math.abs(x - endX) > 5 || Math.abs(y - endY) > 5) {
+            x += (Math.random() - 0.5) * 20; // Random horizontal movement
+            y += (Math.random() - 0.5) * 20; // Random vertical movement
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(endX, endY);
+
+        ctx.stroke();
+        ctx.restore();
+        hasCrack = true;
+    }
 
 
         function handleKeyDown(event) {
