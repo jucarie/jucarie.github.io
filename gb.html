@@ -351,7 +351,62 @@
                 35: { type: "double", orientation: "horizontal" }
             };
 
-            dynamicObjectsArray = []; // Clear the array before populating
+            dynamicObjectsArray = []; 
+
+            MAZE.forEach((row, rowIndex) => {
+                row.forEach((cell, colIndex) => {
+                    if (staticImagesTable[cell]) {
+                        contexts.maze.drawImage(staticImagesTable[cell], colIndex * TILE_SIZE, rowIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        
+                        if (cell === 1) {
+                            contexts.maze.strokeStyle = '#775B31'; 
+                            contexts.maze.lineWidth = 1;
+                            contexts.maze.beginPath();
+                            contexts.maze.rect(colIndex * TILE_SIZE, rowIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                            contexts.maze.stroke();
+                        }
+                    } else if (dynamicImageTable[cell]) {
+                        contexts.maze.drawImage(images.floor, colIndex * TILE_SIZE, rowIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        
+                        contexts.maze.strokeStyle = '#775B31'; 
+                        contexts.maze.lineWidth = 1;
+                        contexts.maze.beginPath();
+                        contexts.maze.rect(colIndex * TILE_SIZE, rowIndex * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                        contexts.maze.stroke();
+                        
+                        dynamicObjectsArray.push({ 
+                            x: colIndex, 
+                            y: rowIndex, 
+                            ...dynamicImageTable[cell],
+                            id: cell
+                        });
+                    }
+                });
+            });
+        }
+
+
+        function initMaze_simple() {
+            const staticImagesTable = {
+                1: images.floor,
+                20: images.wall_normal,
+                21: images.wall_corner,
+                22: images.wall_lateral,
+                23: images.wall_down,
+                9: images.end
+            };
+
+            const dynamicImageTable = {
+                4: true,
+                30: { type: "single", direction: "up" },
+                31: { type: "single", direction: "down" },
+                32: { type: "single", direction: "left" },
+                33: { type: "single", direction: "right" },
+                34: { type: "double", orientation: "vertical" },
+                35: { type: "double", orientation: "horizontal" }
+            };
+
+            dynamicObjectsArray = []; 
 
             MAZE.forEach((row, rowIndex) => {
                 row.forEach((cell, colIndex) => {
