@@ -102,7 +102,7 @@
             position: relative;
         } */
         .d-pad {
-            background-image: url("https://www.transparenttextures.com/patterns/dark-denim.png");
+            /* background-image: url("https://www.transparenttextures.com/patterns/dark-denim.png"); */
             width: 40%;
             height: 0;
             padding-bottom: 40%;
@@ -281,14 +281,14 @@
                 left: 'https://jucarie.github.io/img/character_left.png'
             },
             turret: {
-                up: 'https://jucarie.github.io/img/turret.png',
-                down: 'https://jucarie.github.io/img/turret_down.png',
-                left: 'https://jucarie.github.io/img/turret.png',
-                right: 'https://jucarie.github.io/img/turret.png'
+                up: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAYAAADFw8lbAAAAp0lEQVR4nO3YsQnEIABG4RhuBGt7h3AS53MSh7C3dgfTBRISLsR3B8L/VSEYfWAhxvTeF1KMcZ8wpWSoeVdqol9TKE2hNIXSFEozoydTCOEwgXNuf661HsbmnF+fVJ+3H945x1Gm2XqF0hRKUyhNoTSF0hRKUyhNoTSF0qYJfXwL9d5fDrTWPl6stXb5vpTy9XY6fAu9W5w2zdYrlKZQmkJpw78d/2UDz2Mjs9eDtj4AAAAASUVORK5CYII=',
+                down: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAYAAADFw8lbAAAAp0lEQVR4nO3YsQnEIABG4RhuBGt7h3AS53MSh7C3dgfTBRISLsR3B8L/VSEYfWAhxvTeF1KMcZ8wpWSoeVdqol9TKE2hNIXSFEozoydTCOEwgXNuf661HsbmnF+fVJ+3H945x1Gm2XqF0hRKUyhNoTSF0hRKUyhNoTSF0qYJfXwL9d5fDrTWPl6stXb5vpTy9XY6fAu9W5w2zdYrlKZQmkJpw78d/2UDz2Mjs9eDtj4AAAAASUVORK5CYII=',
+                left: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAYAAADFw8lbAAAAp0lEQVR4nO3YsQnEIABG4RhuBGt7h3AS53MSh7C3dgfTBRISLsR3B8L/VSEYfWAhxvTeF1KMcZ8wpWSoeVdqol9TKE2hNIXSFEozoydTCOEwgXNuf661HsbmnF+fVJ+3H945x1Gm2XqF0hRKUyhNoTSF0hRKUyhNoTSF0qYJfXwL9d5fDrTWPl6stXb5vpTy9XY6fAu9W5w2zdYrlKZQmkJpw78d/2UDz2Mjs9eDtj4AAAAASUVORK5CYII=',
+                right: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAYAAADFw8lbAAAAp0lEQVR4nO3YsQnEIABG4RhuBGt7h3AS53MSh7C3dgfTBRISLsR3B8L/VSEYfWAhxvTeF1KMcZ8wpWSoeVdqol9TKE2hNIXSFEozoydTCOEwgXNuf661HsbmnF+fVJ+3H945x1Gm2XqF0hRKUyhNoTSF0hRKUyhNoTSF0qYJfXwL9d5fDrTWPl6stXb5vpTy9XY6fAu9W5w2zdYrlKZQmkJpw78d/2UDz2Mjs9eDtj4AAAAASUVORK5CYII='
             },
             doubleTurret: {
-                horizontal: 'https://jucarie.github.io/img/turret.png', // double_turret_horizontal.png
-                vertical: 'https://jucarie.github.io/img/turret_down.png' // double_turret_vertical.png
+                horizontal: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAYAAADFw8lbAAAAqElEQVR4nO3YwQmFIACH8Yw3h2fXcQxHcAJHcAzX8ewidguK4kV+74Hw/50iTD/wIGZ67wsp57xPGEIw1LwrNdGvKZSmUJpCaQqlmdGTKcZ4mMBauz+31g5jU0qvT6rP2w/vnOMo02y9QmkKpSmUplCaQmkKpSmUplCaQmnThD6+hXrvLwc65x4vVmu9fF9K+Xo7Hb6F3i1Om2brFUpTKE2htOHfjv+yAdcgI3fam8QJAAAAAElFTkSuQmCC', // double_turret_horizontal.png
+                vertical: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACoAAAAqCAYAAADFw8lbAAAAqElEQVR4nO3YwQmFIACH8Yw3h2fXcQxHcAJHcAzX8ewidguK4kV+74Hw/50iTD/wIGZ67wsp57xPGEIw1LwrNdGvKZSmUJpCaQqlmdGTKcZ4mMBauz+31g5jU0qvT6rP2w/vnOMo02y9QmkKpSmUplCaQmkKpSmUplCaQmnThD6+hXrvLwc65x4vVmu9fF9K+Xo7Hb6F3i1Om2brFUpTKE2htOHfjv+yAdcgI3fam8QJAAAAAElFTkSuQmCC' // double_turret_vertical.png
             },
             end: 'https://jucarie.github.io/img/end.png'
         };
@@ -321,6 +321,7 @@
 
             return Promise.all(promises);
         }
+
 
         function initCanvases() {
             Object.values(canvases).forEach(canvas => {
