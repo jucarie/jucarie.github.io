@@ -12,7 +12,7 @@
             align-items: flex-start;
             height: 100vh;
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Courier New', monospace;
             overflow: hidden;
         }
         .gameboy {
@@ -24,17 +24,28 @@
             max-width: 480px;
             margin: 20px;
         }
+        .step-counter {
+            background-color: #333333;
+            color: #F2EEC7;
+            padding: 5px;
+            text-align: center;
+            font-size: 16px;
+            border-radius: 10px 10px 0 0;
+            /* margin-bottom: 10px; */
+        }
         .screen-area {
             background-color: #F2EEC7;
             border: 10px solid #333333;
-            border-radius: 10px;
+            border-top-width: 0;
+            /* border-radius: 10px; */
+            border-bottom-right-radius: 10px;
+            border-bottom-left-radius: 10px;
             margin-bottom: 20px;
             position: relative;
             height: auto;
             padding-bottom: 90%;
             overflow: hidden;
         }
-
         .screen-area canvas {
             position: absolute;
             top: 0;
@@ -91,10 +102,40 @@
             cursor: pointer;
         }
 
+        @media (max-width: 767px) and (orientation: portrait) {
+            body {
+                align-items: center;
+            }
+            .gameboy {
+                transform: rotate(90deg);
+                width: 90vh;
+                max-width: none;
+                height: 90vw;
+                display: flex;
+                flex-direction: column;
+            }
+            .screen-area {
+                flex: 1;
+                padding-bottom: 0;
+            }
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            .d-pad {
+                width: 80%;
+                padding-bottom: 80%;
+                margin-bottom: 20px;
+            }
+            .action-buttons {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="gameboy">
+        <div class="step-counter">Current Steps: <span id="stepCount">0</span></div>
         <div class="screen-area">
             <canvas id="mazeCanvas"></canvas>
             <canvas id="dynamicCanvas"></canvas>
@@ -113,6 +154,8 @@
             </div>
         </div>
     </div>
+
+
 
     <script>
         // Constants
@@ -147,6 +190,7 @@
         let characterImage;
         let framesets = [];
         let globalFrameCounter = 0;
+        let stepCount = 0;
         let dynamicObjectsArray = [];
         const laserBeamCache = {};
 
@@ -421,6 +465,7 @@
                     characterImage = newImage;
                 }
                 globalFrameCounter = (globalFrameCounter + 1) % 4;
+                updateStepCount();
                 drawObjectCanvas();
 
                 if (MAZE[newY][newX] === 9) {
@@ -498,6 +543,14 @@
             characterImage = images.character_down;
             globalFrameCounter = 0;
             drawObjectCanvas();
+            stepCount = 0;
+            document.getElementById('stepCount').textContent = stepCount;
+        }
+
+
+        function updateStepCount() {
+            stepCount++;
+            document.getElementById('stepCount').textContent = stepCount;
         }
 
         document.addEventListener('keydown', handleKeyDown);
