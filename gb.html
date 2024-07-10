@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Boy Maze Game</title>
+    <title>Game Boy Color Maze Game</title>
     <style>
         body {
-            background-color: #9BA4B5;
+            background-color: #A8C686;
             display: flex;
             justify-content: center;
             align-items: flex-start;
             height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
+            overflow: hidden;
         }
         .gameboy {
-            background-color: #8C9CB1;
-            border-radius: 10px 10px 50px 10px;
+            background-color: #6699CC;
+            border-radius: 10px;
             padding: 20px;
             box-shadow: 0 0 20px rgba(0,0,0,0.3);
             width: 90%;
@@ -24,14 +25,13 @@
             margin: 20px;
         }
         .screen-area {
-            background-color: #9EAF8E;
-            border: 20px solid #626F59;
-            border-radius: 10px 10px 30px 10px;
+            background-color: #F2EEC7;
+            border: 10px solid #333333;
+            border-radius: 10px;
             margin-bottom: 20px;
             position: relative;
-            /* width: 100%; */
             height: auto;
-            padding-bottom: 90%; /* Maintain aspect ratio */
+            padding-bottom: 90%;
             overflow: hidden;
         }
 
@@ -56,7 +56,7 @@
         }
         .d-pad-button {
             position: absolute;
-            background-color: #3E4652;
+            background-color: #555555;
             border: none;
             cursor: pointer;
         }
@@ -85,11 +85,12 @@
             height: 0;
             padding-bottom: 20%;
             border-radius: 50%;
-            background-color: #9B1515;
+            background-color: #CC0000;
             border: none;
             margin: 0 5%;
             cursor: pointer;
         }
+
     </style>
 </head>
 <body>
@@ -475,17 +476,6 @@
             }
         }
 
-        async function init() {
-            await loadImages();
-            initCanvases();
-            initMaze();
-            preRenderFrames();
-            characterImage = images.character_down;
-            globalFrameCounter = 0;
-            drawObjectCanvas();
-        }
-
-
 
         document.querySelectorAll('.d-pad-button').forEach(button => {
             button.addEventListener('click', function() {
@@ -500,12 +490,21 @@
             });
         });
 
-
-
-
+        async function init() {
+            await loadImages();
+            initCanvases();
+            initMaze();
+            preRenderFrames();
+            characterImage = images.character_down;
+            globalFrameCounter = 0;
+            drawObjectCanvas();
+        }
 
         document.addEventListener('keydown', handleKeyDown);
         window.onload = init;
+
+
+
     </script>
 </body>
 </html>
