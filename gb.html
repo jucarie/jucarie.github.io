@@ -132,6 +132,29 @@
                 inset 0 0 10px rgba(0,0,0,0.3),
                 0 2px 5px rgba(0,0,0,0.2);
         }
+        .game-dialog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #F2EEC7;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .restart-button {
+            background-color: #CC0000;
+            color: #F2EEC7;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
@@ -508,18 +531,18 @@
 
                 if (MAZE[newY][newX] === 9) {
                     setTimeout(() => {
-                        alert("You won");
-                        characterImage = images.character_down;
-                        init();
+                        // characterImage = images.character_down;
+                        showDialog("You won!", "Play Again");
+                        return;
                     }, 50);
                     return;
                 }
 
                 if (isCharacterHitByLaser()) {
                     setTimeout(() => {
-                        alert("Game Over! You were hit by a laser.");
-                        characterImage = images.character_down;
-                        init();
+                        // characterImage = images.character_down;
+                        showDialog("Game Over! You were hit by a laser.", "Try Again");
+                        return;
                     }, 50);
                     return;
                 }
@@ -572,6 +595,24 @@
             hasCrack = true;
         }
 
+        function showDialog(message, buttonText) {
+            const dialog = document.createElement('div');
+            dialog.className = 'game-dialog';
+            dialog.innerHTML = `
+                <p>${message}</p>
+                <button class="restart-button">${buttonText}</button>
+            `;
+            
+            const screenArea = document.querySelector('.screen-area');
+            screenArea.appendChild(dialog);
+
+            const restartButton = dialog.querySelector('.restart-button');
+            restartButton.addEventListener('click', () => {
+                dialog.remove();
+                init();
+            });
+        }
+
 
         function handleKeyDown(event) {
             const moves = {
@@ -589,12 +630,12 @@
         document.querySelectorAll('.d-pad-button').forEach(button => {
             button.addEventListener('click', function() {
                 const moves = {
-                'ArrowUp': [0, -1, images.character_up],
-                'ArrowDown': [0, 1, images.character_down],
-                'ArrowLeft': [-1, 0, images.character_left],
-                'ArrowRight': [1, 0, images.character_right]
+                'up': [0, -1, images.character_up],
+                'down': [0, 1, images.character_down],
+                'left': [-1, 0, images.character_left],
+                'right': [1, 0, images.character_right]
             };
-            if (moves[event.key]) {
+            if (moves[this.id]) {
                 moveCharacter(...moves[this.id]);
             }
             });
