@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Boy Color Maze Game</title>
     <style>
-        html, body {touch-action: none;}
         body {
             background-color: #A8C686;
             display: flex;
@@ -19,8 +18,6 @@
         .gameboy {
             background-color: #6699CC;
             background-image: url('https://www.transparenttextures.com/patterns/rough-cloth.png');
-
-            /* background-image: url("https://www.transparenttextures.com/patterns/green-dust-and-scratches.png"); */
             border-radius: 15px;
             padding: 20px;
             box-shadow: 
@@ -31,6 +28,34 @@
             margin: 20px;
             height: 100%;
             /* position: relative; */
+        }
+        .gameboy::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, 
+                transparent 0%, rgba(255,255,255,0.2) 20%, 
+                rgba(255,255,255,0.2) 80%, transparent 100%);
+        }
+
+        .gameboy::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, 
+                transparent 0%, rgba(0,0,0,0.1) 20%, 
+                rgba(0,0,0,0.1) 80%, transparent 100%);
+        }
+        @media (max-width: 767px) {
+            .gameboy {
+                height: 70%; /* Height for mobile devices */
+            }
         }
         .step-counter {
             background-color: #333333;
@@ -67,12 +92,6 @@
             justify-content: space-between;
             flex-wrap: wrap;
         }
-        /* .d-pad {
-            width: 40%;
-            height: 0;
-            padding-bottom: 40%;
-            position: relative;
-        } */
         .d-pad {
             /* background-image: url("https://www.transparenttextures.com/patterns/dark-denim.png"); */
             width: 40%;
@@ -134,7 +153,7 @@
         }
         .game-dialog {
             position: absolute;
-            top: 50%;
+            top: 85%;
             left: 50%;
             transform: translate(-50%, -50%);
             background-color: rgba(0, 0, 0, 0.8);
@@ -211,6 +230,7 @@
         let stepCount = 0;
         let dynamicObjectsArray = [];
         let hasCrack = false;
+        let isPause = false;
         const laserBeamCache = {};
 
         // Canvas setup
@@ -514,7 +534,7 @@
             const newX = characterPosition.x + dx;
             const newY = characterPosition.y + dy;
 
-            if (!IMPASSABLE_TILES.includes(MAZE[newY][newX])) {
+            if (!isPause && !IMPASSABLE_TILES.includes(MAZE[newY][newX])) {
                 characterPosition.x = newX;
                 characterPosition.y = newY;
                 
@@ -531,18 +551,14 @@
 
                 if (MAZE[newY][newX] === 9) {
                     setTimeout(() => {
-                        // characterImage = images.character_down;
                         showDialog("You won!", "Play Again");
-                        return;
                     }, 50);
                     return;
                 }
 
                 if (isCharacterHitByLaser()) {
                     setTimeout(() => {
-                        // characterImage = images.character_down;
                         showDialog("Game Over! You were hit by a laser.", "Try Again");
-                        return;
                     }, 50);
                     return;
                 }
@@ -571,22 +587,20 @@
 
         function drawCrack() {
             if (hasCrack) return; 
-            const ctx = contexts.character; // Using the character canvas for the crack
+            const ctx = contexts.character; 
             ctx.save();
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; // Semi-transparent white
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; 
             ctx.lineWidth = 3;
             ctx.beginPath();
 
-            // Start from a random point on the top edge
             const startX = Math.random() * canvases.character.width;
             ctx.moveTo(startX, 0);
 
-            // Create a jagged line down the screen
             let x = startX;
             let y = 0;
             while (y < canvases.character.height) {
-                x += (Math.random() - 0.5) * 20; // Random horizontal movement
-                y += Math.random() * 20 + 10; // Random vertical movement
+                x += (Math.random() - 0.5) * 20; 
+                y += Math.random() * 20 + 10; 
                 ctx.lineTo(x, y);
             }
 
@@ -596,6 +610,7 @@
         }
 
         function showDialog(message, buttonText) {
+            isPause = true
             const dialog = document.createElement('div');
             dialog.className = 'game-dialog';
             dialog.innerHTML = `
@@ -603,7 +618,7 @@
                 <button class="restart-button">${buttonText}</button>
             `;
             
-            const screenArea = document.querySelector('.screen-area');
+            const screenArea = document.querySelector('.controls');
             screenArea.appendChild(dialog);
 
             const restartButton = dialog.querySelector('.restart-button');
@@ -642,20 +657,6 @@
         });
 
 
-        // document.querySelectorAll('.d-pad-button').forEach(button => {
-        //     button.addEventListener('click', function() {
-        //         const key = this.id;
-        //         const event = new KeyboardEvent('keydown', {
-        //             key: key === 'up' ? 'ArrowUp' :
-        //                  key === 'down' ? 'ArrowDown' :
-        //                  key === 'left' ? 'ArrowLeft' :
-        //                  'ArrowRight'
-        //         });
-        //         document.dispatchEvent(event);
-        //     });
-        // });
-
-
         async function init() {
             await loadImages();
             initCanvases();
@@ -665,6 +666,7 @@
             globalFrameCounter = 0;
             drawObjectCanvas();
             stepCount = 0;
+            isPause = false;
             document.getElementById('stepCount').textContent = stepCount;
         }
 
