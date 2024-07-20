@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stocuri Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 60%;
+            margin: auto;
+            padding: 20px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e0e0e0;
+        }
+        select, input[type="text"], input[type="date"], input[type="number"] {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background-color: #333;
+            color: #e0e0e0;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #555;
+        }
+        button {
+            background-color: #1f76d2;
+            color: #e0e0e0;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #extra-fields, #insert-lot-group {
+            display: none;
+        }
+        #lot-summary {
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+        .lot-item {
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background-color: #2c2c2c;
+        }
+        .lot-item h3 {
+            margin-top: 0;
+        }
+        .lot-item p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stocuri Dashboard</h1>
+        <form id="stocuri-form">
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            <div class="form-group">
+                <label for="methods">Methods:</label>
+                <select id="methods" name="methods" required>
+                    <option value="Intrari">Intrari</option>
+                    <option value="Iesire">Iesire</option>
+                    <option value="ReInvestire">ReInvestire</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="chose-lot">Chose Lot:</label>
+                <select id="chose-lot" name="chose-lot" required></select>
+            </div>
+            <div id="insert-lot-group" class="form-group">
+                <label for="insert-lot">Insert Lot:</label>
+                <input type="text" id="insert-lot" name="insert-lot" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" name="quantity" min="1" required autocomplete="off">
+            </div>
+            <div id="extra-fields">
+                <div class="form-group">
+                    <label for="facture-no">Facture No:</label>
+                    <input type="text" id="facture-no" name="facture-no" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label for="organization-name">Organization Name:</label>
+                    <input type="text" id="organization-name" name="organization-name">
+                </div>
+            </div>
+            <button type="button" onclick="updateDashboard()">Update</button>
+        </form>
+
+        <div id="lot-summary">
+            <h2>Resumat</h2>
+            <div id="summary"></div>
+            <h3>Total Quantity: <span id="total-quantity">0</span></h3>
+        </div>
+    </div>
+
+    <script>
+        // Data store for lots and history
+        let lots = {};
+        let lotOptions = ['Default','Creaza alt lot'];
+        let totalQuantity = 0;
+
+        // Function to handle form updates
+        function updateDashboard() {
+            const date = document.getElementById('date').value;
+            const method = document.getElementById('methods').value;
+            const choseLot = document.getElementById('chose-lot').value;
+            const insertLot = document.getElementById('insert-lot').value;
+            const quantity = parseInt(document.getElementById('quantity').value, 10);
+            const factureNo = document.getElementById('facture-no').value;
+            const organizationName = document.getElementById('organization-name').value;
+
+            if (method === 'Iesire' && (!factureNo || !organizationName)) {
+                alert('Please fill out Facture No and Organization Name for Iesire method.');
+                return;
+            }
+
+            let lotToUse = choseLot;
+            if (choseLot === 'Creaza alt lot') {
+                if (!insertLot) {
+                    alert('Please provide a name for the new lot.');
+                    return;
+                }
+                lotToUse = insertLot;
+                if (!lotOptions.includes(lotToUse)) {
+                    lotOptions.push(lotToUse);
+                    updateLotOptions();
+                    document.getElementById('chose-lot').value = lotToUse;
+                    document.getElementById('insert-lot-group').style.display = 'none';
+                }
+                document.getElementById('insert-lot').value = ''; // Clear input after use
+            }
+
+            if (!lots[lotToUse]) {
+                lots[lotToUse] = { quantity: 0, history: [] };
+            }
+
+            if (method === 'Iesire') {
+                if (lots[lotToUse].quantity < quantity) {
+                    alert('Error: Quantity to subtract exceeds available quantity.');
+                    return;
+                }
+                lots[lotToUse].quantity -= quantity;
+                lots[lotToUse].history.push({
+                    date: date,
+                    method: 'Iesire',
+                    factureNo: factureNo,
+                    organizationName: organizationName,
+                    quantity: quantity
+                });
+            } else {
+                lots[lotToUse].quantity += quantity;
+                lots[lotToUse].history.push({
+                    date: date,
+                    method: 'Intrari',
+                    quantity: quantity
+                });
+            }
+
+            updateTotalQuantity();
+            displaySummary();
+        }
+
+        // Function to update total quantity
+        function updateTotalQuantity() {
+            totalQuantity = Object.values(lots).reduce((total, lot) => total + lot.quantity, 0);
+            document.getElementById('total-quantity').textContent = totalQuantity;
+        }
+
+        // Function to display lot summary
+        function displaySummary() {
+            const summaryDiv = document.getElementById('summary');
+            summaryDiv.innerHTML = '';
+            for (const [lot, details] of Object.entries(lots)) {
+                summaryDiv.innerHTML += `<div class="lot-item">
+                    <h3>Lot: ${lot}</h3>
+                    <p>Quantity: ${details.quantity}</p>
+                    ${details.history.map(entry => `<p>- ${entry.date}: ${entry.method} with ${entry.quantity} quantity ${entry.factureNo ? `, Facture No: ${entry.factureNo}, Organization: ${entry.organizationName}` : ''}</p>`).join('')}
+                </div>`;
+            }
+        }
+
+        // Function to handle method change
+        document.getElementById('methods').addEventListener('change', function () {
+            const extraFields = document.getElementById('extra-fields');
+            if (this.value === 'Iesire') {
+                extraFields.style.display = 'block';
+            } else {
+                extraFields.style.display = 'none';
+            }
+        });
+
+        // Function to handle lot change
+        document.getElementById('chose-lot').addEventListener('change', function () {
+            const insertLotGroup = document.getElementById('insert-lot-group');
+            if (this.value === 'Creaza alt lot') {
+                insertLotGroup.style.display = 'block';
+            } else {
+                insertLotGroup.style.display = 'none';
+            }
+        });
+
+        // Function to initialize lots dropdown
+        function initializeLots() {
+            updateLotOptions();
+        }
+
+        // Function to update lot options dropdown
+        function updateLotOptions() {
+            const choseLotSelect = document.getElementById('chose-lot');
+            choseLotSelect.innerHTML = '';
+            lotOptions.forEach(lot => {
+                const option = document.createElement('option');
+                option.value = lot;
+                option.textContent = lot;
+                choseLotSelect.appendChild(option);
+            });
+        }
+
+        // Initialize lots on page load
+        initializeLots();
+    </script>
+</body>
+</html>
