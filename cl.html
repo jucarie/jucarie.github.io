@@ -299,7 +299,6 @@
         document.getElementById('block-count').addEventListener('input', function() {
             blockCount = parseInt(this.value);
             if (blockCount < 2) blockCount = 2;
-            if (blockCount > 7) blockCount = 7;
             this.value = blockCount;
         });
 
