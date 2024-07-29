@@ -40,9 +40,6 @@
         }
 
         .setup-panel {
-            background-color: #f9f9f9;
-            border-radius: 15px;
-            padding: 20px;
             margin-bottom: 20px;
             margin-top: 20px;
             text-align: center;
@@ -67,15 +64,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            
-
         }
 
         #guess-container {
             touch-action: none;
-            touch-action: none;
             display: flex;
-            flex-direction: row; /* Change to row */
+            flex-direction: column; /* Change to column */
             align-items: center;
             gap: 10px;
             max-width: 100%;
@@ -97,33 +91,6 @@
 
         .color-slot.over {
             opacity: 0.7;
-        }
-
-        .color-slot.selected, .color-slot.clicked {
-            border: 3px solid #000;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3);
-        }
-
-
-        .setup-panel, .give-up-panel {
-            display: none;
-            background-color: #f9f9f9;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        #secret-sequence {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .secret-color {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
         }
 
         .info-panel {
@@ -152,6 +119,7 @@
             background-color: #45a049;
         }
 
+
         @media (max-width: 480px) {
             .game-container {
                 padding: 20px;
@@ -179,24 +147,19 @@
             <p id="correct-positions"></p>
             <button id="new-game">Joc Nou</button>
             <button id="toggle-options">Game options</button>
-            <button id="toggle-give-up">I give up</button>
-            <div class="setup-panel">
+            <div class="setup-panel" style="display: none;">
                 <label for="block-count">Schimba numarul de culori:</label>
-                <input type="number" id="block-count" min="2" max="10" value="4">
+                <input type="number" id="block-count" min="2" value="4">
                 <button id="start-game">Modifica</button>
-            </div>
-            <div class="give-up-panel">
-                <p>Secret sequence:</p>
-                <div id="secret-sequence"></div>
             </div>
         </div>
     </div>
     <script>
-       const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
+        const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
         let secretSequence = [];
         let currentGuess = [];
         let blockCount = 4;
-        let selectedBlock = null;
+        let draggedElement = null;
 
         function initializeGame() {
             secretSequence = [];
@@ -218,31 +181,76 @@
             currentGuess.forEach((color, index) => {
                 const colorSlot = document.createElement('div');
                 colorSlot.classList.add('color-slot');
-                colorSlot.style.backgroundColor = color;
+                colorSlot.style.backgroundColor = color; // Fix here
                 colorSlot.setAttribute('data-index', index);
-                colorSlot.addEventListener('click', selectBlock);
+                colorSlot.setAttribute('draggable', true);
+                colorSlot.addEventListener('dragstart', drag);
+                colorSlot.addEventListener('dragover', allowDrop);
+                colorSlot.addEventListener('drop', drop);
+                colorSlot.addEventListener('touchstart', touchStart);
+                colorSlot.addEventListener('touchmove', touchMove);
+                colorSlot.addEventListener('touchend', touchEnd);
                 guessContainer.appendChild(colorSlot);
             });
         }
 
-        function selectBlock(ev) {
-            const clickedBlock = ev.target;
-            if (selectedBlock === null) {
-                selectedBlock = clickedBlock;
-                clickedBlock.classList.add('selected');
-            } else {
-                const fromIndex = parseInt(selectedBlock.getAttribute('data-index'));
-                const toIndex = parseInt(clickedBlock.getAttribute('data-index'));
+
+
+        function drag(ev) {
+            draggedElement = ev.target;
+            ev.dataTransfer.setData("text/plain", ev.target.getAttribute('data-index'));
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.target.classList.add('over');
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const fromIndex = parseInt(ev.dataTransfer.getData("text/plain"));
+            const toIndex = parseInt(ev.target.getAttribute('data-index'));
+            if (fromIndex !== toIndex) {
+                [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
+                updateDisplay();
+                updateCorrectPositions();
+            }
+            ev.target.classList.remove('over');
+        }
+
+        function touchStart(ev) {
+            ev.preventDefault();
+            draggedElement = ev.target;
+        }
+
+        function touchMove(ev) {
+            ev.preventDefault();
+            const touch = ev.targetTouches[0];
+            draggedElement.style.left = `${touch.pageX - draggedElement.offsetWidth / 2}px`;
+            draggedElement.style.top = `${touch.pageY - draggedElement.offsetHeight / 2}px`;
+            const targetElement = document.elementFromPoint(touch.pageX, touch.pageY);
+            if (targetElement && targetElement.classList.contains('color-slot') && targetElement !== draggedElement) {
+                targetElement.classList.add('over');
+            }
+        }
+
+        function touchEnd(ev) {
+            ev.preventDefault();
+            const touch = ev.changedTouches[0];
+            const targetElement = document.elementFromPoint(touch.pageX, touch.pageY);
+            if (targetElement && targetElement.classList.contains('color-slot') && targetElement !== draggedElement) {
+                const fromIndex = parseInt(draggedElement.getAttribute('data-index'));
+                const toIndex = parseInt(targetElement.getAttribute('data-index'));
                 if (fromIndex !== toIndex) {
                     [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
                     updateDisplay();
                     updateCorrectPositions();
                 }
-                selectedBlock.classList.remove('selected');
-                selectedBlock = null;
             }
+            draggedElement.style.left = '';
+            draggedElement.style.top = '';
+            document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
         }
-
 
         function updateCorrectPositions() {
             let correctPositions = 0;
@@ -257,21 +265,20 @@
             if (correctPositions === blockCount) {
                 resultElement.textContent = 'Felicitări! Ai rezolvat puzzle-ul!';
                 document.querySelectorAll('.color-slot').forEach(slot => {
-                    slot.removeEventListener('click', selectBlock);
+                    slot.setAttribute('draggable', false);
+                    slot.removeEventListener('dragstart', drag);
+                    slot.removeEventListener('dragover', allowDrop);
+                    slot.removeEventListener('drop', drop);
+                    slot.removeEventListener('touchstart', touchStart);
+                    slot.removeEventListener('touchmove', touchMove);
+                    slot.removeEventListener('touchend', touchEnd);
                 });
             }
         }
 
-        function showSecretSequence() {
-            const secretSequenceContainer = document.getElementById('secret-sequence');
-            secretSequenceContainer.innerHTML = '';
-            secretSequence.forEach(color => {
-                const secretColor = document.createElement('div');
-                secretColor.classList.add('secret-color');
-                secretColor.style.backgroundColor = color;
-                secretSequenceContainer.appendChild(secretColor);
-            });
-        }
+        document.addEventListener('dragend', function(ev) {
+            document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
+        });
 
         document.getElementById('start-game').addEventListener('click', initializeGame);
         document.getElementById('new-game').addEventListener('click', initializeGame);
@@ -279,25 +286,16 @@
             const setupPanel = document.querySelector('.setup-panel');
             setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
         });
-        document.getElementById('toggle-give-up').addEventListener('click', function() {
-            const giveUpPanel = document.querySelector('.give-up-panel');
-            if (giveUpPanel.style.display === 'none' || giveUpPanel.style.display === '') {
-                giveUpPanel.style.display = 'block';
-                showSecretSequence();
-            } else {
-                giveUpPanel.style.display = 'none';
-            }
-        });
         document.getElementById('block-count').addEventListener('input', function() {
             blockCount = parseInt(this.value);
             if (blockCount < 2) blockCount = 2;
-            if (blockCount > 10) blockCount = 10;
             this.value = blockCount;
         });
 
         window.onload = function() {
             document.getElementById('block-count').value = blockCount;
             initializeGame();
+            console.log(secretSequence)
         };
     </script>
 </body>
