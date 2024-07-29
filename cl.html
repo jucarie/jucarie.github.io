@@ -154,7 +154,7 @@
         </div>
     </div>
     <script>
-        const colors = ['roșu', 'albastru', 'verde', 'galben', 'mov', 'portocaliu', 'roz'];
+        const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
         let secretSequence = [];
         let currentGuess = [];
         let blockCount = 4;
@@ -180,7 +180,7 @@
             currentGuess.forEach((color, index) => {
                 const colorSlot = document.createElement('div');
                 colorSlot.classList.add('color-slot');
-                colorSlot.style.backgroundColor = translateColorToEnglish(color);
+                colorSlot.style.backgroundColor = color; // Fix here
                 colorSlot.setAttribute('data-index', index);
                 colorSlot.setAttribute('draggable', true);
                 colorSlot.addEventListener('dragstart', drag);
