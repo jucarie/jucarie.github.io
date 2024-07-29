@@ -67,6 +67,7 @@
         }
 
         #guess-container {
+            touch-action: none;
             display: flex;
             flex-direction: column; /* Change to column */
             align-items: center;
@@ -294,6 +295,7 @@
         window.onload = function() {
             document.getElementById('block-count').value = blockCount;
             initializeGame();
+            console.log(secretSequence)
         };
     </script>
 </body>
