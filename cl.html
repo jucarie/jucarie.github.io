@@ -73,10 +73,10 @@
 
         #guess-container {
             touch-action: none;
-            touch-action: none;
             display: flex;
             flex-direction: row; /* Change to row */
             align-items: center;
+            flex-wrap: wrap;
             gap: 10px;
             max-width: 100%;
         }
@@ -101,6 +101,7 @@
 
         .color-slot.selected, .color-slot.clicked {
             border: 3px solid #000;
+            opacity: 0.7;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3);
         }
 
@@ -182,7 +183,7 @@
             <button id="toggle-give-up">I give up</button>
             <div class="setup-panel">
                 <label for="block-count">Schimba numarul de culori:</label>
-                <input type="number" id="block-count" min="2" max="10" value="4">
+                <input type="number" id="block-count" min="2" max="9" value="4">
                 <button id="start-game">Modifica</button>
             </div>
             <div class="give-up-panel">
@@ -192,7 +193,7 @@
         </div>
     </div>
     <script>
-       const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
+       const colors = ['red', 'blue', 'green', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
         let secretSequence = [];
         let currentGuess = [];
         let blockCount = 4;
@@ -275,23 +276,27 @@
 
         document.getElementById('start-game').addEventListener('click', initializeGame);
         document.getElementById('new-game').addEventListener('click', initializeGame);
-        document.getElementById('toggle-options').addEventListener('click', function() {
-            const setupPanel = document.querySelector('.setup-panel');
-            setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
-        });
+
         document.getElementById('toggle-give-up').addEventListener('click', function() {
             const giveUpPanel = document.querySelector('.give-up-panel');
             if (giveUpPanel.style.display === 'none' || giveUpPanel.style.display === '') {
                 giveUpPanel.style.display = 'block';
                 showSecretSequence();
-            } else {
-                giveUpPanel.style.display = 'none';
-            }
+            } else giveUpPanel.style.display = 'none';
+            
         });
+        document.getElementById('toggle-options').addEventListener('click', function() {
+            const setupPanel = document.querySelector('.setup-panel');
+            if (setupPanel.style.display === 'none' || setupPanel.style.display === '') {
+                setupPanel.style.display = 'block';
+                showSecretSequence();
+            } else setupPanel.style.display = 'none';
+        });
+
         document.getElementById('block-count').addEventListener('input', function() {
             blockCount = parseInt(this.value);
             if (blockCount < 2) blockCount = 2;
-            if (blockCount > 10) blockCount = 10;
+            if (blockCount > 9) blockCount = 9;
             this.value = blockCount;
         });
 
