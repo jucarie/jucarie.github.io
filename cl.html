@@ -154,177 +154,159 @@
         </div>
     </div>
     <script>
-    const colors = ['roșu', 'albastru', 'verde', 'galben', 'mov', 'portocaliu', 'roz'];
-    let secretSequence = [];
-    let currentGuess = [];
-    let blockCount = 4;
-    let draggedElement = null;
-    let dragPreview = null;
+        const colors = ['roșu', 'albastru', 'verde', 'galben', 'mov', 'portocaliu', 'roz'];
+        let secretSequence = [];
+        let currentGuess = [];
+        let blockCount = 4;
+        let draggedElement = null;
 
-    function initializeGame() {
-        secretSequence = [];
-        const availableColors = [...colors];
-        for (let i = 0; i < blockCount; i++) {
-            const randomIndex = Math.floor(Math.random() * availableColors.length);
-            secretSequence.push(availableColors[randomIndex]);
-            availableColors.splice(randomIndex, 1);
-        }
-        currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
-        updateDisplay();
-        document.getElementById('result').textContent = 'Schimbă culorile pentru a potrivi secvența secretă!';
-        updateCorrectPositions();
-    }
-
-    function updateDisplay() {
-        const guessContainer = document.getElementById('guess-container');
-        guessContainer.innerHTML = '';
-        currentGuess.forEach((color, index) => {
-            const colorSlot = document.createElement('div');
-            colorSlot.classList.add('color-slot');
-            colorSlot.style.backgroundColor = translateColorToEnglish(color);
-            colorSlot.setAttribute('data-index', index);
-            colorSlot.setAttribute('draggable', true);
-            colorSlot.addEventListener('dragstart', drag);
-            colorSlot.addEventListener('dragover', allowDrop);
-            colorSlot.addEventListener('drop', drop);
-            colorSlot.addEventListener('touchstart', touchStart);
-            colorSlot.addEventListener('touchmove', touchMove);
-            colorSlot.addEventListener('touchend', touchEnd);
-            guessContainer.appendChild(colorSlot);
-        });
-    }
-
-    function translateColorToEnglish(romanianColor) {
-        const colorMap = {
-            'roșu': 'red',
-            'albastru': 'blue',
-            'verde': 'green',
-            'galben': 'yellow',
-            'mov': 'purple',
-            'portocaliu': 'orange',
-            'roz': 'pink'
-        };
-        return colorMap[romanianColor] || romanianColor;
-    }
-
-    function drag(ev) {
-        draggedElement = ev.target;
-        ev.dataTransfer.setData("text/plain", ev.target.getAttribute('data-index'));
-    }
-
-    function allowDrop(ev) {
-        ev.preventDefault();
-        ev.target.classList.add('over');
-    }
-
-    function drop(ev) {
-        ev.preventDefault();
-        const fromIndex = parseInt(ev.dataTransfer.getData("text/plain"));
-        const toIndex = parseInt(ev.target.getAttribute('data-index'));
-        if (fromIndex !== toIndex) {
-            [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
+        function initializeGame() {
+            secretSequence = [];
+            const availableColors = [...colors];
+            for (let i = 0; i < blockCount; i++) {
+                const randomIndex = Math.floor(Math.random() * availableColors.length);
+                secretSequence.push(availableColors[randomIndex]);
+                availableColors.splice(randomIndex, 1);
+            }
+            currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
             updateDisplay();
+            document.getElementById('result').textContent = 'Schimbă culorile pentru a potrivi secvența secretă!';
             updateCorrectPositions();
         }
-        ev.target.classList.remove('over');
-    }
 
-    function touchStart(ev) {
-        ev.preventDefault();
-        draggedElement = ev.target;
-
-        // Create drag preview
-        dragPreview = draggedElement.cloneNode(true);
-        dragPreview.style.position = 'absolute';
-        dragPreview.style.pointerEvents = 'none';
-        dragPreview.style.zIndex = '1000';
-        document.body.appendChild(dragPreview);
-
-        const touch = ev.targetTouches[0];
-        dragPreview.style.left = `${touch.pageX - dragPreview.offsetWidth / 2}px`;
-        dragPreview.style.top = `${touch.pageY - dragPreview.offsetHeight / 2}px`;
-    }
-
-    function touchMove(ev) {
-        ev.preventDefault();
-        const touch = ev.targetTouches[0];
-        dragPreview.style.left = `${touch.pageX - dragPreview.offsetWidth / 2}px`;
-        dragPreview.style.top = `${touch.pageY - dragPreview.offsetHeight / 2}px`;
-
-        const targetElement = document.elementFromPoint(touch.pageX, touch.pageY);
-        if (targetElement && targetElement.classList.contains('color-slot') && targetElement !== draggedElement) {
-            targetElement.classList.add('over');
+        function updateDisplay() {
+            const guessContainer = document.getElementById('guess-container');
+            guessContainer.innerHTML = '';
+            currentGuess.forEach((color, index) => {
+                const colorSlot = document.createElement('div');
+                colorSlot.classList.add('color-slot');
+                colorSlot.style.backgroundColor = translateColorToEnglish(color);
+                colorSlot.setAttribute('data-index', index);
+                colorSlot.setAttribute('draggable', true);
+                colorSlot.addEventListener('dragstart', drag);
+                colorSlot.addEventListener('dragover', allowDrop);
+                colorSlot.addEventListener('drop', drop);
+                colorSlot.addEventListener('touchstart', touchStart);
+                colorSlot.addEventListener('touchmove', touchMove);
+                colorSlot.addEventListener('touchend', touchEnd);
+                guessContainer.appendChild(colorSlot);
+            });
         }
-    }
 
-    function touchEnd(ev) {
-        ev.preventDefault();
-        const touch = ev.changedTouches[0];
-        const targetElement = document.elementFromPoint(touch.pageX, touch.pageY);
-        if (targetElement && targetElement.classList.contains('color-slot') && targetElement !== draggedElement) {
-            const fromIndex = parseInt(draggedElement.getAttribute('data-index'));
-            const toIndex = parseInt(targetElement.getAttribute('data-index'));
+        function translateColorToEnglish(romanianColor) {
+            const colorMap = {
+                'roșu': 'red',
+                'albastru': 'blue',
+                'verde': 'green',
+                'galben': 'yellow',
+                'mov': 'purple',
+                'portocaliu': 'orange',
+                'roz': 'pink'
+            };
+            return colorMap[romanianColor] || romanianColor;
+        }
+
+        function drag(ev) {
+            draggedElement = ev.target;
+            ev.dataTransfer.setData("text/plain", ev.target.getAttribute('data-index'));
+        }
+
+        function allowDrop(ev) {
+            ev.preventDefault();
+            ev.target.classList.add('over');
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const fromIndex = parseInt(ev.dataTransfer.getData("text/plain"));
+            const toIndex = parseInt(ev.target.getAttribute('data-index'));
             if (fromIndex !== toIndex) {
                 [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
                 updateDisplay();
                 updateCorrectPositions();
             }
+            ev.target.classList.remove('over');
         }
-        if (dragPreview) {
-            document.body.removeChild(dragPreview);
-            dragPreview = null;
-        }
-        draggedElement.style.left = '';
-        draggedElement.style.top = '';
-        document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
-    }
 
-    function updateCorrectPositions() {
-        let correctPositions = 0;
-        for (let i = 0; i < blockCount; i++) {
-            if (currentGuess[i] === secretSequence[i]) {
-                correctPositions++;
+        function touchStart(ev) {
+            ev.preventDefault();
+            draggedElement = ev.target;
+        }
+
+        function touchMove(ev) {
+            ev.preventDefault();
+            const touch = ev.targetTouches[0];
+            draggedElement.style.left = `${touch.pageX - draggedElement.offsetWidth / 2}px`;
+            draggedElement.style.top = `${touch.pageY - draggedElement.offsetHeight / 2}px`;
+            const targetElement = document.elementFromPoint(touch.pageX, touch.pageY);
+            if (targetElement && targetElement.classList.contains('color-slot') && targetElement !== draggedElement) {
+                targetElement.classList.add('over');
             }
         }
-        const resultElement = document.getElementById('result');
-        const correctPositionsElement = document.getElementById('correct-positions');
-        correctPositionsElement.textContent = `Poziții corecte: ${correctPositions} / ${blockCount}`;
-        if (correctPositions === blockCount) {
-            resultElement.textContent = 'Felicitări! Ai rezolvat puzzle-ul!';
-            document.querySelectorAll('.color-slot').forEach(slot => {
-                slot.setAttribute('draggable', false);
-                slot.removeEventListener('dragstart', drag);
-                slot.removeEventListener('dragover', allowDrop);
-                slot.removeEventListener('drop', drop);
-                slot.removeEventListener('touchstart', touchStart);
-                slot.removeEventListener('touchmove', touchMove);
-                slot.removeEventListener('touchend', touchEnd);
-            });
+
+        function touchEnd(ev) {
+            ev.preventDefault();
+            const touch = ev.changedTouches[0];
+            const targetElement = document.elementFromPoint(touch.pageX, touch.pageY);
+            if (targetElement && targetElement.classList.contains('color-slot') && targetElement !== draggedElement) {
+                const fromIndex = parseInt(draggedElement.getAttribute('data-index'));
+                const toIndex = parseInt(targetElement.getAttribute('data-index'));
+                if (fromIndex !== toIndex) {
+                    [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
+                    updateDisplay();
+                    updateCorrectPositions();
+                }
+            }
+            draggedElement.style.left = '';
+            draggedElement.style.top = '';
+            document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
         }
-    }
 
-    document.addEventListener('dragend', function(ev) {
-        document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
-    });
+        function updateCorrectPositions() {
+            let correctPositions = 0;
+            for (let i = 0; i < blockCount; i++) {
+                if (currentGuess[i] === secretSequence[i]) {
+                    correctPositions++;
+                }
+            }
+            const resultElement = document.getElementById('result');
+            const correctPositionsElement = document.getElementById('correct-positions');
+            correctPositionsElement.textContent = `Poziții corecte: ${correctPositions} / ${blockCount}`;
+            if (correctPositions === blockCount) {
+                resultElement.textContent = 'Felicitări! Ai rezolvat puzzle-ul!';
+                document.querySelectorAll('.color-slot').forEach(slot => {
+                    slot.setAttribute('draggable', false);
+                    slot.removeEventListener('dragstart', drag);
+                    slot.removeEventListener('dragover', allowDrop);
+                    slot.removeEventListener('drop', drop);
+                    slot.removeEventListener('touchstart', touchStart);
+                    slot.removeEventListener('touchmove', touchMove);
+                    slot.removeEventListener('touchend', touchEnd);
+                });
+            }
+        }
 
-    document.getElementById('start-game').addEventListener('click', initializeGame);
-    document.getElementById('new-game').addEventListener('click', initializeGame);
-    document.getElementById('toggle-options').addEventListener('click', function() {
-        const setupPanel = document.querySelector('.setup-panel');
-        setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
-    });
-    document.getElementById('block-count').addEventListener('input', function() {
-        blockCount = parseInt(this.value);
-        if (blockCount < 2) blockCount = 2;
-        if (blockCount > 7) blockCount = 7;
-        this.value = blockCount;
-    });
+        document.addEventListener('dragend', function(ev) {
+            document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
+        });
 
-    window.onload = function() {
-        document.getElementById('block-count').value = blockCount;
-        initializeGame();
-    };
+        document.getElementById('start-game').addEventListener('click', initializeGame);
+        document.getElementById('new-game').addEventListener('click', initializeGame);
+        document.getElementById('toggle-options').addEventListener('click', function() {
+            const setupPanel = document.querySelector('.setup-panel');
+            setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
+        });
+        document.getElementById('block-count').addEventListener('input', function() {
+            blockCount = parseInt(this.value);
+            if (blockCount < 2) blockCount = 2;
+            if (blockCount > 7) blockCount = 7;
+            this.value = blockCount;
+        });
 
+        window.onload = function() {
+            document.getElementById('block-count').value = blockCount;
+            initializeGame();
+        };
     </script>
 </body>
 </html>
