@@ -79,8 +79,15 @@
             height: 70px;
             border-radius: 15px;
             cursor: move;
-            transition: transform 0.2s, box-shadow 0.2s;
+            /* transition: transform 0.2s, box-shadow 0.2s; */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             flex-shrink: 0;
+        }
+
+        .color-slot.dragging {
+            opacity: 0.5;
+            transform: scale(1.1);
+            z-index: 1000;
         }
 
         .color-slot:hover {
@@ -154,98 +161,99 @@
         </div>
     </div>
     <script>
-        const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
-        let secretSequence = [];
-        let currentGuess = [];
-        let blockCount = 4;
-        let draggedElement = null;
+        
+    const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
+    let secretSequence = [];
+    let currentGuess = [];
+    let blockCount = 4;
+    let draggedElement = null;
 
-        function initializeGame() {
-            secretSequence = [];
-            const availableColors = [...colors];
-            for (let i = 0; i < blockCount; i++) {
-                const randomIndex = Math.floor(Math.random() * availableColors.length);
-                secretSequence.push(availableColors[randomIndex]);
-                availableColors.splice(randomIndex, 1);
-            }
-            currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
+    function initializeGame() {
+        secretSequence = [];
+        const availableColors = [...colors];
+        for (let i = 0; i < blockCount; i++) {
+            const randomIndex = Math.floor(Math.random() * availableColors.length);
+            secretSequence.push(availableColors[randomIndex]);
+            availableColors.splice(randomIndex, 1);
+        }
+        currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
+        updateDisplay();
+        document.getElementById('result').textContent = 'Schimbă culorile pentru a potrivi secvența secretă!';
+        updateCorrectPositions();
+    }
+
+    function updateDisplay() {
+        const guessContainer = document.getElementById('guess-container');
+        guessContainer.innerHTML = '';
+        currentGuess.forEach((color, index) => {
+            const colorSlot = document.createElement('div');
+            colorSlot.classList.add('color-slot');
+            colorSlot.style.backgroundColor = color;
+            colorSlot.setAttribute('data-index', index);
+            colorSlot.setAttribute('draggable', true);
+            colorSlot.addEventListener('dragstart', dragStart);
+            colorSlot.addEventListener('dragend', dragEnd);
+            colorSlot.addEventListener('dragover', allowDrop);
+            colorSlot.addEventListener('drop', drop);
+            colorSlot.addEventListener('touchstart', touchStart);
+            colorSlot.addEventListener('touchmove', touchMove);
+            colorSlot.addEventListener('touchend', touchEnd);
+            guessContainer.appendChild(colorSlot);
+        });
+    }
+
+    function dragStart(ev) {
+        draggedElement = ev.target;
+        ev.target.classList.add('dragging');
+        ev.dataTransfer.setData("text/plain", ev.target.getAttribute('data-index'));
+    }
+
+    function dragEnd(ev) {
+        ev.target.classList.remove('dragging');
+        draggedElement = null;
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+        ev.target.classList.add('over');
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        const fromIndex = parseInt(ev.dataTransfer.getData("text/plain"));
+        const toIndex = parseInt(ev.target.getAttribute('data-index'));
+        if (fromIndex !== toIndex) {
+            [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
             updateDisplay();
-            document.getElementById('result').textContent = 'Schimbă culorile pentru a potrivi secvența secretă!';
             updateCorrectPositions();
         }
+        ev.target.classList.remove('over');
+    }
 
-        function updateDisplay() {
-            const guessContainer = document.getElementById('guess-container');
-            guessContainer.innerHTML = '';
-            currentGuess.forEach((color, index) => {
-                const colorSlot = document.createElement('div');
-                colorSlot.classList.add('color-slot');
-                colorSlot.style.backgroundColor = color; // Fix here
-                colorSlot.setAttribute('data-index', index);
-                colorSlot.setAttribute('draggable', true);
-                colorSlot.addEventListener('dragstart', drag);
-                colorSlot.addEventListener('dragover', allowDrop);
-                colorSlot.addEventListener('drop', drop);
-                colorSlot.addEventListener('touchstart', touchStart);
-                colorSlot.addEventListener('touchmove', touchMove);
-                colorSlot.addEventListener('touchend', touchEnd);
-                guessContainer.appendChild(colorSlot);
-            });
-        }
+    function touchStart(ev) {
+        ev.preventDefault();
+        draggedElement = ev.target;
+        draggedElement.classList.add('dragging');
+    }
 
-        function translateColorToEnglish(romanianColor) {
-            const colorMap = {
-                'roșu': 'red',
-                'albastru': 'blue',
-                'verde': 'green',
-                'galben': 'yellow',
-                'mov': 'purple',
-                'portocaliu': 'orange',
-                'roz': 'pink'
-            };
-            return colorMap[romanianColor] || romanianColor;
-        }
-
-        function drag(ev) {
-            draggedElement = ev.target;
-            ev.dataTransfer.setData("text/plain", ev.target.getAttribute('data-index'));
-        }
-
-        function allowDrop(ev) {
-            ev.preventDefault();
-            ev.target.classList.add('over');
-        }
-
-        function drop(ev) {
-            ev.preventDefault();
-            const fromIndex = parseInt(ev.dataTransfer.getData("text/plain"));
-            const toIndex = parseInt(ev.target.getAttribute('data-index'));
-            if (fromIndex !== toIndex) {
-                [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
-                updateDisplay();
-                updateCorrectPositions();
-            }
-            ev.target.classList.remove('over');
-        }
-
-        function touchStart(ev) {
-            ev.preventDefault();
-            draggedElement = ev.target;
-        }
-
-        function touchMove(ev) {
-            ev.preventDefault();
-            const touch = ev.targetTouches[0];
+    function touchMove(ev) {
+        ev.preventDefault();
+        const touch = ev.targetTouches[0];
+        if (draggedElement) {
+            draggedElement.style.position = 'absolute';
             draggedElement.style.left = `${touch.pageX - draggedElement.offsetWidth / 2}px`;
             draggedElement.style.top = `${touch.pageY - draggedElement.offsetHeight / 2}px`;
+
             const targetElement = document.elementFromPoint(touch.pageX, touch.pageY);
             if (targetElement && targetElement.classList.contains('color-slot') && targetElement !== draggedElement) {
                 targetElement.classList.add('over');
             }
         }
+    }
 
-        function touchEnd(ev) {
-            ev.preventDefault();
+    function touchEnd(ev) {
+        ev.preventDefault();
+        if (draggedElement) {
             const touch = ev.changedTouches[0];
             const targetElement = document.elementFromPoint(touch.pageX, touch.pageY);
             if (targetElement && targetElement.classList.contains('color-slot') && targetElement !== draggedElement) {
@@ -257,55 +265,60 @@
                     updateCorrectPositions();
                 }
             }
+            draggedElement.style.position = '';
             draggedElement.style.left = '';
             draggedElement.style.top = '';
+            draggedElement.classList.remove('dragging');
             document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
         }
+    }
 
-        function updateCorrectPositions() {
-            let correctPositions = 0;
-            for (let i = 0; i < blockCount; i++) {
-                if (currentGuess[i] === secretSequence[i]) {
-                    correctPositions++;
-                }
-            }
-            const resultElement = document.getElementById('result');
-            const correctPositionsElement = document.getElementById('correct-positions');
-            correctPositionsElement.textContent = `Poziții corecte: ${correctPositions} / ${blockCount}`;
-            if (correctPositions === blockCount) {
-                resultElement.textContent = 'Felicitări! Ai rezolvat puzzle-ul!';
-                document.querySelectorAll('.color-slot').forEach(slot => {
-                    slot.setAttribute('draggable', false);
-                    slot.removeEventListener('dragstart', drag);
-                    slot.removeEventListener('dragover', allowDrop);
-                    slot.removeEventListener('drop', drop);
-                    slot.removeEventListener('touchstart', touchStart);
-                    slot.removeEventListener('touchmove', touchMove);
-                    slot.removeEventListener('touchend', touchEnd);
-                });
+    function updateCorrectPositions() {
+        let correctPositions = 0;
+        for (let i = 0; i < blockCount; i++) {
+            if (currentGuess[i] === secretSequence[i]) {
+                correctPositions++;
             }
         }
+        const resultElement = document.getElementById('result');
+        const correctPositionsElement = document.getElementById('correct-positions');
+        correctPositionsElement.textContent = `Poziții corecte: ${correctPositions} / ${blockCount}`;
+        if (correctPositions === blockCount) {
+            resultElement.textContent = 'Felicitări! Ai rezolvat puzzle-ul!';
+            document.querySelectorAll('.color-slot').forEach(slot => {
+                slot.setAttribute('draggable', false);
+                slot.removeEventListener('dragstart', dragStart);
+                slot.removeEventListener('dragend', dragEnd);
+                slot.removeEventListener('dragover', allowDrop);
+                slot.removeEventListener('drop', drop);
+                slot.removeEventListener('touchstart', touchStart);
+                slot.removeEventListener('touchmove', touchMove);
+                slot.removeEventListener('touchend', touchEnd);
+            });
+        }
+    }
 
-        document.addEventListener('dragend', function(ev) {
-            document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
-        });
+    document.addEventListener('dragend', function(ev) {
+        document.querySelectorAll('.color-slot').forEach(slot => slot.classList.remove('over'));
+    });
 
-        document.getElementById('start-game').addEventListener('click', initializeGame);
-        document.getElementById('new-game').addEventListener('click', initializeGame);
-        document.getElementById('toggle-options').addEventListener('click', function() {
-            const setupPanel = document.querySelector('.setup-panel');
-            setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
-        });
-        document.getElementById('block-count').addEventListener('input', function() {
-            blockCount = parseInt(this.value);
-            if (blockCount < 2) blockCount = 2;
-            this.value = blockCount;
-        });
+    document.getElementById('start-game').addEventListener('click', initializeGame);
+    document.getElementById('new-game').addEventListener('click', initializeGame);
+    document.getElementById('toggle-options').addEventListener('click', function() {
+        const setupPanel = document.querySelector('.setup-panel');
+        setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
+    });
+    document.getElementById('block-count').addEventListener('input', function() {
+        blockCount = parseInt(this.value);
+        if (blockCount < 2) blockCount = 2;
+        this.value = blockCount;
+    });
 
-        window.onload = function() {
-            document.getElementById('block-count').value = blockCount;
-            initializeGame();
-        };
+    window.onload = function() {
+        document.getElementById('block-count').value = blockCount;
+        initializeGame();
+    };
+
     </script>
 </body>
 </html>
