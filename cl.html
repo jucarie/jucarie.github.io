@@ -82,8 +82,8 @@
         }
 
         .color-slot {
-            width: 70px;
-            height: 70px;
+            width: 90px;
+            height: 90px;
             border-radius: 15px;
             cursor: move;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -101,7 +101,7 @@
 
         .color-slot.selected, .color-slot.clicked {
             border: 3px solid #000;
-            opacity: 0.7;
+            opacity: 0.6;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 0, 0, 0.3);
         }
 
@@ -183,7 +183,7 @@
             <button id="toggle-give-up">I give up</button>
             <div class="setup-panel">
                 <label for="block-count">Schimba numarul de culori:</label>
-                <input type="number" id="block-count" min="2" max="9" value="4">
+                <input type="number" id="block-count" min="2" max="10" value="4">
                 <button id="start-game">Modifica</button>
             </div>
             <div class="give-up-panel">
@@ -193,13 +193,20 @@
         </div>
     </div>
     <script>
-       const colors = ['red', 'blue', 'green', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
+       const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
         let secretSequence = [];
         let currentGuess = [];
         let blockCount = 4;
         let selectedBlock = null;
 
+        const giveUpPanel = document.querySelector('.give-up-panel');
+        const setupPanel = document.querySelector('.setup-panel');
+
+
         function initializeGame() {
+            setupPanel.style.display = 'none';
+            giveUpPanel.style.display = 'none';
+
             secretSequence = [];
             const availableColors = [...colors];
             for (let i = 0; i < blockCount; i++) {
@@ -277,26 +284,24 @@
         document.getElementById('start-game').addEventListener('click', initializeGame);
         document.getElementById('new-game').addEventListener('click', initializeGame);
 
-        document.getElementById('toggle-give-up').addEventListener('click', function() {
-            const giveUpPanel = document.querySelector('.give-up-panel');
-            if (giveUpPanel.style.display === 'none' || giveUpPanel.style.display === '') {
-                giveUpPanel.style.display = 'block';
-                showSecretSequence();
-            } else giveUpPanel.style.display = 'none';
-            
-        });
+
         document.getElementById('toggle-options').addEventListener('click', function() {
+            giveUpPanel.style.display = 'none';
             const setupPanel = document.querySelector('.setup-panel');
-            if (setupPanel.style.display === 'none' || setupPanel.style.display === '') {
-                setupPanel.style.display = 'block';
-                showSecretSequence();
-            } else setupPanel.style.display = 'none';
+            setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('toggle-give-up').addEventListener('click', function() {
+            setupPanel.style.display = 'none';
+            const giveUpPanel = document.querySelector('.give-up-panel');
+            giveUpPanel.style.display = giveUpPanel.style.display === 'none' ? 'block' : 'none';
+            showSecretSequence();
         });
 
         document.getElementById('block-count').addEventListener('input', function() {
             blockCount = parseInt(this.value);
             if (blockCount < 2) blockCount = 2;
-            if (blockCount > 9) blockCount = 9;
+            if (blockCount > 10) blockCount = 10;
             this.value = blockCount;
         });
 
