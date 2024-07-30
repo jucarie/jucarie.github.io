@@ -296,6 +296,7 @@
         function initializeGame() {
             setupPanel.style.display = 'none';
             giveUpPanel.style.display = 'none';
+            selectedBlock = null;
             secretSequence = [];
             const availableColors = [...colors];
             for (let i = 0; i < blockCount; i++) {
