@@ -12,20 +12,15 @@
             box-sizing: border-box;
         }
 
-        /* body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #121212;
-            color: #fff;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        } */
+
+
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #121212;
             background-image: url("https://jucarie.github.io/img/cl/dark-doodle-wallpapers.jpg");
+            background-size: cover;
+            background-repeat: repeat;
+            background-attachment: fixed;
             color: #fff;
             display: flex;
             justify-content: center;
@@ -35,7 +30,7 @@
         }
 
         .game-container {
-            background-color: #1e1e1e;
+            background-color: rgba(30, 30, 30, 0.9);
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             padding: 30px;
@@ -51,7 +46,7 @@
         }
 
         .setup-panel {
-            background-color: #2a2a2a;
+            background-color: rgba(42, 42, 42, 0.9);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
@@ -324,32 +319,23 @@
             const fromBlock = document.querySelector(`.color-slot[data-index="${fromIndex}"]`);
             const toBlock = document.querySelector(`.color-slot[data-index="${toIndex}"]`);
 
-            // Start fade out
             fromBlock.classList.add('fade-out');
             toBlock.classList.add('fade-out');
 
-            // Wait for fade out to complete
             setTimeout(() => {
-                // Swap colors in the currentGuess array
                 [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
-
-                // Update block colors without recreating elements
-                fromBlock.style.backgroundColor = currentGuess[fromIndex];
-                toBlock.style.backgroundColor = currentGuess[toIndex];
-
-                // Start fade in
-                fromBlock.classList.remove('fade-out');
-                toBlock.classList.remove('fade-out');
-                fromBlock.classList.add('fade-in');
-                toBlock.classList.add('fade-in');
-
-                // Update correct positions
+                updateDisplay();
                 updateCorrectPositions();
 
-                // Remove fade-in class after animation completes
+                const newFromBlock = document.querySelector(`.color-slot[data-index="${fromIndex}"]`);
+                const newToBlock = document.querySelector(`.color-slot[data-index="${toIndex}"]`);
+
+                newFromBlock.classList.add('fade-in');
+                newToBlock.classList.add('fade-in');
+
                 setTimeout(() => {
-                    fromBlock.classList.remove('fade-in');
-                    toBlock.classList.remove('fade-in');
+                    newFromBlock.classList.remove('fade-in');
+                    newToBlock.classList.remove('fade-in');
                 }, 300);
             }, 300);
         }
