@@ -125,7 +125,7 @@
         .color-slot.selected, .color-slot.clicked {
             /* border: 3px solid #fff;
             opacity: 0.6; */
-            box-shadow: 0 0 15px;
+            /* box-shadow: 0 0 15px; */
             width: 84px;
             height: 84px;
         }
@@ -267,7 +267,12 @@
             <div class="setup-panel">
                 <label for="block-count">Schimba numarul de culori:</label>
                 <input type="number" id="block-count" min="2" max="10" value="4">
-                <button id="start-game">Modifica</button>
+
+                <label for="correct-start">Incepe cu poziti corecte:</label>
+                <input type="number" id="correct-start" min="0" max="10" value="0">
+                <div></div>
+
+                <button id="start-game">Actualizeaza</button>
             </div>
             <div class="give-up-panel">
                 <p>Raspunsul:</p>
@@ -282,16 +287,169 @@
         </div>
     </div>
     <script>
-        const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
+        const colors = ['#ff073a', 'blue', '#39ff14', 'yellow', '#9400ff', 'orange', 'pink', 'brown', '#00f9ff', 'magenta'];
         let secretSequence = [];
         let currentGuess = [];
         let blockCount = 4;
+        let correctStart = null;
         let selectedBlock = null;
 
         const giveUpPanel = document.querySelector('.give-up-panel');
         const setupPanel = document.querySelector('.setup-panel');
         const modal = document.getElementById('winModal');
         const okButton = document.getElementById('okButton');
+
+        // function initializeGame() {
+        //     setupPanel.style.display = 'none';
+        //     giveUpPanel.style.display = 'none';
+        //     selectedBlock = null;
+        //     secretSequence = [];
+        //     const availableColors = [...colors];
+        //     for (let i = 0; i < blockCount; i++) {
+        //         const randomIndex = Math.floor(Math.random() * availableColors.length);
+        //         secretSequence.push(availableColors[randomIndex]);
+        //         availableColors.splice(randomIndex, 1);
+        //     }
+
+        //     do {
+        //         currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
+        //     } while (arraysEqual(currentGuess, secretSequence));
+
+        //     console.log('Secret Sequence:', secretSequence);
+        //     console.log('Current Sequence:', currentGuess);
+        //     updateDisplay();
+        //     updateCorrectPositions();
+        // }
+
+
+        // function arraysEqual(arr1, arr2) {
+        //     if (arr1.length !== arr2.length) return false;
+        //     for (let i = 0; i < arr1.length; i++) {
+        //         if (arr1[i] !== arr2[i]) return false;
+        //     }
+        //     return true;
+        // }
+
+
+        // function initializeGame() {
+        //     setupPanel.style.display = 'none';
+        //     giveUpPanel.style.display = 'none';
+        //     selectedBlock = null;
+        //     secretSequence = [];
+        //     const availableColors = [...colors];
+        //     for (let i = 0; i < blockCount; i++) {
+        //         const randomIndex = Math.floor(Math.random() * availableColors.length);
+        //         secretSequence.push(availableColors[randomIndex]);
+        //         availableColors.splice(randomIndex, 1);
+        //     }
+
+        //     do {
+        //         currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
+        //     } while (arraysEqual(currentGuess, secretSequence));
+
+        //     const startingBlocks = 2; // Number of predefined correct positions
+        //     const restColorsTemp = [...colors];
+        //     const usedIndices = new Set();
+
+        //     // Generate random unique indices for startingBlocks
+        //     while (usedIndices.size < startingBlocks) {
+        //         const randomIndex = Math.floor(Math.random() * blockCount);
+        //         usedIndices.add(randomIndex);
+        //     }
+
+        //     // Ensure the correct positions are set
+        //     usedIndices.forEach(index => {
+        //         if (currentGuess[index] !== secretSequence[index]) {
+        //             const correctColor = secretSequence[index];
+        //             const correctColorIndexInGuess = currentGuess.indexOf(correctColor);
+        //             if (correctColorIndexInGuess !== -1) {
+        //                 // Swap the incorrect color with the correct one
+        //                 [currentGuess[index], currentGuess[correctColorIndexInGuess]] = [currentGuess[correctColorIndexInGuess], currentGuess[index]];
+        //             } else {
+        //                 // If the correct color is not in the currentGuess, replace with a color from restColorsTemp
+        //                 const randomColorIndex = Math.floor(Math.random() * restColorsTemp.length);
+        //                 currentGuess[index] = restColorsTemp[randomColorIndex];
+        //                 restColorsTemp.splice(randomColorIndex, 1);
+        //             }
+        //         }
+        //     });
+
+        //     console.log('Secret Sequence:', secretSequence);
+        //     console.log('Current Sequence:', currentGuess);
+        //     updateDisplay();
+        //     updateCorrectPositions();
+        // }
+
+
+        // function initializeGame() {
+        //     setupPanel.style.display = 'none';
+        //     giveUpPanel.style.display = 'none';
+        //     selectedBlock = null;
+        //     secretSequence = [];
+        //     const availableColors = [...colors];
+        //     for (let i = 0; i < blockCount; i++) {
+        //         const randomIndex = Math.floor(Math.random() * availableColors.length);
+        //         secretSequence.push(availableColors[randomIndex]);
+        //         availableColors.splice(randomIndex, 1);
+        //     }
+
+        //     do {
+        //         currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
+        //     } while (arraysEqual(currentGuess, secretSequence));
+
+        //     const startingBlocks = 3; // Number of predefined correct positions
+        //     const restColorsTemp = [...colors];
+        //     const usedIndices = new Set();
+
+        //     // Generate random unique indices for startingBlocks
+        //     while (usedIndices.size < startingBlocks) {
+        //         const randomIndex = Math.floor(Math.random() * blockCount);
+        //         usedIndices.add(randomIndex);
+        //     }
+        //     console.log('usedIndices:', usedIndices);
+
+        //     // Ensure the correct positions are set
+        //     usedIndices.forEach(index => {
+        //         if (currentGuess[index] !== secretSequence[index]) {
+        //             const correctColor = secretSequence[index];
+        //             const correctColorIndexInGuess = currentGuess.indexOf(correctColor);
+        //             if (correctColorIndexInGuess !== -1) {
+        //                 // Swap the incorrect color with the correct one
+        //                 [currentGuess[index], currentGuess[correctColorIndexInGuess]] = [currentGuess[correctColorIndexInGuess], currentGuess[index]];
+        //             } else {
+        //                 // If the correct color is not in the currentGuess, replace with a color from restColorsTemp
+        //                 const randomColorIndex = Math.floor(Math.random() * restColorsTemp.length);
+        //                 currentGuess[index] = restColorsTemp[randomColorIndex];
+        //                 restColorsTemp.splice(randomColorIndex, 1);
+        //             }
+        //         }
+        //     });
+
+        //     // Check and swap remaining positions if they match the secretSequence
+        //     for (let i = 0; i < blockCount; i++) {
+        //         if (!usedIndices.has(i) && currentGuess[i] === secretSequence[i]) {
+        //             const randomColorIndex = Math.floor(Math.random() * restColorsTemp.length);
+        //             currentGuess[i] = restColorsTemp[randomColorIndex];
+        //             restColorsTemp.splice(randomColorIndex, 1);
+        //         }
+        //     }
+
+        //     console.log('Secret Sequence:', secretSequence);
+        //     console.log('Current Sequence:', currentGuess);
+        //     updateDisplay();
+        //     updateCorrectPositions();
+        // }
+
+
+        // function arraysEqual(arr1, arr2) {
+        //     if (arr1.length !== arr2.length) return false;
+        //     for (let i = 0; i < arr1.length; i++) {
+        //         if (arr1[i] !== arr2[i]) return false;
+        //     }
+        //     return true;
+        // }
+
+
 
         function initializeGame() {
             setupPanel.style.display = 'none';
@@ -305,18 +463,297 @@
                 availableColors.splice(randomIndex, 1);
             }
 
-            do {
-                currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
-            } while (arraysEqual(currentGuess, secretSequence));
+            currentGuess = new Array(blockCount).fill(null);
+            const usedIndices = new Set();
+            console.log('correctStart:', correctStart);
+
+            if (correctStart === 0) {
+                // Generate currentGuess with no correct positions
+                const remainingColors = [...secretSequence];
+                derangementShuffle(remainingColors);
+                currentGuess = remainingColors;
+            } else if (correctStart > 0) {
+                // Generate random unique indices for currentGuess based on correctStart number
+                while (usedIndices.size < correctStart) {
+                    const randomIndex = Math.floor(Math.random() * blockCount);
+                    usedIndices.add(randomIndex);
+                }
+
+                usedIndices.forEach(index => {
+                    currentGuess[index] = secretSequence[index];
+                });
+
+                // Shuffle the remaining colors from the secretSequence with the specified logic
+                const remainingIndices = [...Array(blockCount).keys()].filter(i => !usedIndices.has(i));
+                const remainingColors = remainingIndices.map(index => secretSequence[index]);
+
+                remainingIndices.forEach((index, idx) => {
+                    let found = false;
+                    for (let i = 0; i < remainingColors.length; i++) {
+                        if (remainingColors[i] !== secretSequence[index]) {
+                            currentGuess[index] = remainingColors[i];
+                            remainingColors.splice(i, 1);
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (remainingColors.length === 2) { 
+                        [remainingColors[1], remainingColors[0]] = [remainingColors[0], remainingColors[1]];
+
+                    } else if (!found && remainingColors.length > 2) {
+                        console.log(222)
+                        const randomIndex = Math.floor(Math.random() * remainingColors.length);
+                        currentGuess[index] = remainingColors[randomIndex];
+                        remainingColors.splice(randomIndex, 1);
+                    }
+                });
+            } else {
+                // Generate a random number of correct positions, including 0, but no more than blockCount - 2
+                const maxStartingBlocks = blockCount - 2;
+                const randomStartingBlocks = Math.floor(Math.random() * (maxStartingBlocks + 1)); // This can now generate 0
+                while (usedIndices.size < randomStartingBlocks) {
+                    const randomIndex = Math.floor(Math.random() * blockCount);
+                    usedIndices.add(randomIndex);
+                }
+
+                if (randomStartingBlocks > 0) {
+                    usedIndices.forEach(index => {
+                        currentGuess[index] = secretSequence[index];
+                    });
+                }
+
+                // Shuffle the remaining colors from the secretSequence with the specified logic
+                const remainingIndices = [...Array(blockCount).keys()].filter(i => !usedIndices.has(i));
+                const remainingColors = remainingIndices.map(index => secretSequence[index]);
+
+                if (randomStartingBlocks === 0) {
+                    // If no correct starting positions, use derangementShuffle for all colors
+                    derangementShuffle(remainingColors);
+                    currentGuess = remainingColors;
+                } else {
+                    remainingIndices.forEach((index, idx) => {
+                        let found = false;
+                        for (let i = 0; i < remainingColors.length; i++) {
+                            if (remainingColors[i] !== secretSequence[index]) {
+                                currentGuess[index] = remainingColors[i];
+                                remainingColors.splice(i, 1);
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (remainingColors.length === 2) { 
+                            [remainingColors[1], remainingColors[0]] = [remainingColors[0], remainingColors[1]];
+                        } else if (!found && remainingColors.length > 2) {
+                            const randomIndex = Math.floor(Math.random() * remainingColors.length);
+                            currentGuess[index] = remainingColors[randomIndex];
+                            remainingColors.splice(randomIndex, 1);
+                        }
+                    });
+                }
+            }
 
             console.log('Secret Sequence:', secretSequence);
+            console.log('Current Sequence:', currentGuess);
             updateDisplay();
             updateCorrectPositions();
         }
 
-        function arraysEqual(arr1, arr2) {
-            return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
+
+        function initializeGameBAK2() {
+            setupPanel.style.display = 'none';
+            giveUpPanel.style.display = 'none';
+            selectedBlock = null;
+            secretSequence = [];
+            const availableColors = [...colors];
+            for (let i = 0; i < blockCount; i++) {
+                const randomIndex = Math.floor(Math.random() * availableColors.length);
+                secretSequence.push(availableColors[randomIndex]);
+                availableColors.splice(randomIndex, 1);
+            }
+
+            currentGuess = new Array(blockCount).fill(null);
+            const usedIndices = new Set();
+            console.log('correctStart:', correctStart);
+            if (correctStart > 0) {
+                // Generate random unique indices for currentGuess based on correctStart number
+                while (usedIndices.size < correctStart) {
+                    const randomIndex = Math.floor(Math.random() * blockCount);
+                    usedIndices.add(randomIndex);
+                }
+                
+                usedIndices.forEach(index => {
+                    currentGuess[index] = secretSequence[index];
+                });
+                console.log('currentGuess:', currentGuess);
+
+                // Shuffle the remaining colors from the secretSequence
+                const remainingIndices = [...Array(blockCount).keys()].filter(i => !usedIndices.has(i));
+                const remainingColors = remainingIndices.map(index => secretSequence[index]);
+                console.log('IntratremainingColors:', remainingColors);
+                derangementShuffle(remainingColors);
+
+                remainingIndices.forEach((index, i) => {
+                    currentGuess[index] = remainingColors[i];
+                });
+                console.log('VenitremainingColors:', remainingColors);
+                // Ensure currentGuess does not match secretSequence
+                if (arraysEqual(currentGuess, secretSequence)) {
+                    const swapIndex = remainingIndices[Math.floor(Math.random() * remainingIndices.length)];
+                    let swapColorIndex;
+                    do {
+                        swapColorIndex = Math.floor(Math.random() * colors.length);
+                    } while (currentGuess.includes(colors[swapColorIndex]));
+                    currentGuess[swapIndex] = colors[swapColorIndex];
+                }
+            } else {
+                // Generate a random number of correct positions, but no more than blockCount - 2
+                const maxStartingBlocks = Math.max(1, blockCount - 2);
+                const randomStartingBlocks = Math.floor(Math.random() * maxStartingBlocks) + 1;
+                while (usedIndices.size < randomStartingBlocks) {
+                    const randomIndex = Math.floor(Math.random() * blockCount);
+                    usedIndices.add(randomIndex);
+                }
+                
+                usedIndices.forEach(index => {
+                    currentGuess[index] = secretSequence[index];
+                });
+
+                // Fill the rest of the positions with random colors
+                for (let i = 0; i < blockCount; i++) {
+                    if (!usedIndices.has(i)) {
+                        const randomIndex = Math.floor(Math.random() * availableColors.length);
+                        currentGuess[i] = availableColors[randomIndex];
+                        availableColors.splice(randomIndex, 1);
+                    }
+                }
+            }
+
+            // console.log('Secret Sequence:', secretSequence);
+            // console.log('Current Sequence:', currentGuess);
+            updateDisplay();
+            updateCorrectPositions();
         }
+
+
+        // dinamicaly generate correctStart;
+        function initializeGameBAK() {
+            setupPanel.style.display = 'none';
+            giveUpPanel.style.display = 'none';
+            secretSequence = [];
+            const availableColors = [...colors];
+            for (let i = 0; i < blockCount; i++) {
+                const randomIndex = Math.floor(Math.random() * availableColors.length);
+                secretSequence.push(availableColors[randomIndex]);
+                availableColors.splice(randomIndex, 1);
+            }
+
+            currentGuess = new Array(blockCount).fill(null);
+            const usedIndices = new Set();
+
+            // Generate a random number of correct positions, but no more than blockCount - 2
+            const maxStartingBlocks = Math.max(1, blockCount - 2);
+            const effectiveCorrectStart = Math.min(correctStart, maxStartingBlocks);
+
+            console.log(correctStart)
+
+            if (correctStart === 0) {
+                // effectiveCorrectStart is 0 then generate currentGuess with no position match
+                const remainingIndices = [...Array(blockCount).keys()];
+                const remainingColors = [...secretSequence];
+                shuffleArray(remainingColors);
+
+                remainingIndices.forEach((index, i) => {
+                    currentGuess[index] = remainingColors[i];
+                });
+            } else if (correctStart > 0) {
+                // Generate random unique indices for currentGuess based on effectiveCorrectStart number
+                while (usedIndices.size < effectiveCorrectStart) {
+                    const randomIndex = Math.floor(Math.random() * blockCount);
+                    usedIndices.add(randomIndex);
+                }
+                usedIndices.forEach(index => {
+                    currentGuess[index] = secretSequence[index];
+                });
+            } else {
+                const randomStartingBlocks = Math.floor(Math.random() * maxStartingBlocks) + 1;
+                while (usedIndices.size < randomStartingBlocks) {
+                    const randomIndex = Math.floor(Math.random() * blockCount);
+                    usedIndices.add(randomIndex);
+                }
+
+                usedIndices.forEach(index => {
+                    currentGuess[index] = secretSequence[index];
+                });
+            }
+
+            // Shuffle the remaining colors from the secretSequence
+            const remainingIndices = [...Array(blockCount).keys()].filter(i => !usedIndices.has(i));
+            const remainingColors = remainingIndices.map(index => secretSequence[index]);
+            shuffleArray(remainingColors);
+
+            remainingIndices.forEach((index, i) => {
+                currentGuess[index] = remainingColors[i];
+            });
+
+            // Ensure currentGuess does not match secretSequence
+            if (arraysEqual(currentGuess, secretSequence)) {
+                const swapIndex = remainingIndices[Math.floor(Math.random() * remainingIndices.length)];
+                let swapColorIndex;
+                do {
+                    swapColorIndex = Math.floor(Math.random() * colors.length);
+                } while (currentGuess.includes(colors[swapColorIndex]));
+                currentGuess[swapIndex] = colors[swapColorIndex];
+            }
+
+            // console.log('Secret Sequence:', secretSequence);
+            // console.log('Current Sequence:', currentGuess);
+            updateDisplay();
+            updateCorrectPositions();
+        }
+
+        // /* Randomize array in-place using Durstenfeld shuffle algorithm */
+        // function shuffleArray(array) {
+        //     for (let i = array.length - 1; i > 0; i--) {
+        //         const j = Math.floor(Math.random() * (i + 1));
+        //         const temp = array[i];
+        //         array[i] = array[j];
+        //         array[j] = temp;
+        //     }
+        // }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        /* Derangement shuffle algorithm */
+        function derangementShuffle(array) {
+            do {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            } while (array.some((v, i) => v === secretSequence[i]));
+        }
+
+        function arraysEqual(arr1, arr2) {
+            if (arr1.length !== arr2.length) return false;
+            for (let i = 0; i < arr1.length; i++) {
+                if (arr1[i] !== arr2[i]) return false;
+            }
+            return true;
+        }
+
+
+
+
+
+        // function arraysEqual(arr1, arr2) {
+        //     // console.log('egal:', arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]));
+        //     return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
+        // }
 
         function selectBlock(ev) {
             const clickedBlock = ev.target;
@@ -405,7 +842,7 @@
             console.log('Secret Sequence Displayed:', secretSequence);
         }
 
-        document.getElementById('start-game').addEventListener('click', initializeGame);
+        // document.getElementById('start-game').addEventListener('click', initializeGame);
         document.getElementById('new-game').addEventListener('click', initializeGame);
 
         document.getElementById('toggle-options').addEventListener('click', function() {
@@ -424,6 +861,24 @@
             if (blockCount < 2) blockCount = 2;
             if (blockCount > 10) blockCount = 10;
             this.value = blockCount;
+        });
+
+        document.getElementById('correct-start').addEventListener('input', function() {
+            console.log('111:', this.value);
+            correctStart = this.value === '' ? 0 : parseInt(this.value);
+            if (correctStart < 0) correctStart = 0;
+            if (correctStart > blockCount) correctStart = blockCount;
+            this.value = correctStart === 0 ? '' : correctStart;
+        });
+
+        document.getElementById('start-game').addEventListener('click', function() {
+            blockCount = parseInt(document.getElementById('block-count').value);
+            correctStart = document.getElementById('correct-start').value === '' ? 0 : parseInt(document.getElementById('correct-start').value);
+            if (correctStart > blockCount) {
+                correctStart = blockCount;
+                document.getElementById('correct-start').value = correctStart;
+            }
+            initializeGame();
         });
 
         okButton.onclick = function() {
