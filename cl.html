@@ -116,11 +116,12 @@
 
         .color-slot.fade-out {
             opacity: 0;
+            transition: opacity 0.3s;
         }
 
         .color-slot.fade-in {
-            opacity: 0;
-            animation: fadeIn 0.3s forwards;
+            opacity: 1;
+            transition: opacity 0.3s;
         }
 
         @keyframes fadeIn {
@@ -334,9 +335,12 @@
                 setTimeout(() => {
                     newFromBlock.classList.remove('fade-in');
                     newToBlock.classList.remove('fade-in');
+                    fromBlock.classList.remove('fade-out');
+                    toBlock.classList.remove('fade-out');
                 }, 300);
             }, 300);
         }
+
 
         function updateDisplay() {
             const guessContainer = document.getElementById('guess-container');
