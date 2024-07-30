@@ -43,7 +43,7 @@
         }
 
         .game-container {
-            touch-action: manipulation;
+            touch-action: none;
             user-select: none;
             background-color: rgba(30, 30, 30, 0.9);
             border-radius: 20px;
@@ -51,9 +51,6 @@
             padding: 30px;
             max-width: 500px;
             width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
         h1 {
@@ -63,9 +60,8 @@
             font-size: 24px;
         }
 
-        .setup-panel, .give-up-panel {
-            display: none;
-            background-color: #2a2a2a;
+        .setup-panel {
+            background-color: rgba(42, 42, 42, 0.9);
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
@@ -75,7 +71,7 @@
 
         .setup-panel label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
             color: #ffffff;
         }
 
@@ -86,7 +82,6 @@
             background-color: #333;
             color: #fff;
             border: 1px solid #555;
-            border-radius: 5px;
         }
 
         .game-board {
@@ -98,11 +93,9 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
         }
 
         #guess-container {
-            touch-action: none;
             display: flex;
             flex-direction: row;
             align-items: center;
@@ -118,17 +111,22 @@
             border-radius: 15px;
             transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s, width 0.2s, height 0.2s;
             flex-shrink: 0;
-            cursor: pointer;
         }
 
         .color-slot:hover {
             transform: translateY(-5px);
         }
 
-        .color-slot.selected {
+        .color-slot.over {
+            opacity: 0.7;
+        }
+
+        .color-slot.selected, .color-slot.clicked {
+            /* border: 3px solid #fff;
+            opacity: 0.6; */
             box-shadow: 0 0 15px;
-            width: 90px;
-            height: 90px;
+            width: 84px;
+            height: 84px;
         }
 
         .color-slot.fade-out {
@@ -141,9 +139,39 @@
             transition: opacity 0.3s;
         }
 
+
+        .setup-panel, .give-up-panel {
+            display: none;
+            background-color: #2a2a2a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        #secret-sequence {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .secret-color {
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            display: inline-block;
+        }
+
+        .secret-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+        }
+
         .info-panel {
             text-align: center;
-            margin-top: 20px;
         }
 
         #result, #correct-positions {
@@ -209,7 +237,7 @@
             }
 
             /* #guess-container {
-                gap: 105px;
+                gap: 5px;
             }
 
             .color-slot {
@@ -226,7 +254,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Color Block Change</h1>
+        <h1>Color block change</h1>
         <div class="game-board">
             <div id="guess-container"></div>
         </div>
@@ -267,7 +295,6 @@
         function initializeGame() {
             setupPanel.style.display = 'none';
             giveUpPanel.style.display = 'none';
-            selectedBlock = null;
             secretSequence = [];
             const availableColors = [...colors];
             for (let i = 0; i < blockCount; i++) {
@@ -275,13 +302,12 @@
                 secretSequence.push(availableColors[randomIndex]);
                 availableColors.splice(randomIndex, 1);
             }
-            
+
             do {
                 currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
             } while (arraysEqual(currentGuess, secretSequence));
 
-            console.log(currentGuess);
-            console.log(secretSequence);
+            console.log('Secret Sequence:', secretSequence);
             updateDisplay();
             updateCorrectPositions();
         }
@@ -335,7 +361,6 @@
             }, 300);
         }
 
-
         function updateDisplay() {
             const guessContainer = document.getElementById('guess-container');
             guessContainer.innerHTML = '';
@@ -356,7 +381,6 @@
                     correctPositions++;
                 }
             }
-            const resultElement = document.getElementById('result');
             const correctPositionsElement = document.getElementById('correct-positions');
             correctPositionsElement.textContent = `Poziții corecte: ${correctPositions} / ${blockCount}`;
             if (correctPositions === blockCount) {
@@ -376,6 +400,7 @@
                 secretColor.style.backgroundColor = color;
                 secretSequenceContainer.appendChild(secretColor);
             });
+            console.log('Secret Sequence Displayed:', secretSequence);
         }
 
         document.getElementById('start-game').addEventListener('click', initializeGame);
