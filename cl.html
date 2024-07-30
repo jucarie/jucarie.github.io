@@ -14,17 +14,32 @@
 
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #121212;
-            background-image: url("https://jucarie.github.io/img/cl/mobile-video-game-vector-background-4406706_1280.png");
-            /* background-size: cover;
-            background-repeat: repeat;
-            background-attachment: fixed; */
+            background: linear-gradient(135deg, 
+                #1a1a2e 0%, 
+                #16213e 25%, 
+                #0f3460 50%, 
+                #1a1a2e 75%, 
+                #16213e 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             color: #fff;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
         }
 
         .game-container {
@@ -122,12 +137,6 @@
         .color-slot.fade-in {
             opacity: 1;
             transition: opacity 0.3s;
-        }
-
-        @keyframes fadeIn {
-            to {
-                opacity: 1;
-            }
         }
 
 
