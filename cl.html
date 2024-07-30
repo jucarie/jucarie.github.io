@@ -51,6 +51,9 @@
             padding: 30px;
             max-width: 500px;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         h1 {
@@ -60,8 +63,9 @@
             font-size: 24px;
         }
 
-        .setup-panel {
-            background-color: rgba(42, 42, 42, 0.9);
+        .setup-panel, .give-up-panel {
+            display: none;
+            background-color: #2a2a2a;
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
@@ -71,7 +75,7 @@
 
         .setup-panel label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
             color: #ffffff;
         }
 
@@ -82,6 +86,7 @@
             background-color: #333;
             color: #fff;
             border: 1px solid #555;
+            border-radius: 5px;
         }
 
         .game-board {
@@ -93,6 +98,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            width: 100%;
         }
 
         #guess-container {
@@ -112,19 +118,14 @@
             border-radius: 15px;
             transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s, width 0.2s, height 0.2s;
             flex-shrink: 0;
+            cursor: pointer;
         }
 
         .color-slot:hover {
             transform: translateY(-5px);
         }
 
-        .color-slot.over {
-            opacity: 0.7;
-        }
-
-        .color-slot.selected, .color-slot.clicked {
-            /* border: 3px solid #fff; */
-            /* opacity: 0.6; */
+        .color-slot.selected {
             box-shadow: 0 0 15px;
             width: 90px;
             height: 90px;
@@ -140,32 +141,9 @@
             transition: opacity 0.3s;
         }
 
-
-        .setup-panel, .give-up-panel {
-            display: none;
-            background-color: #2a2a2a;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        #secret-sequence {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .secret-color {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-        }
-
         .info-panel {
             text-align: center;
+            margin-top: 20px;
         }
 
         #result, #correct-positions {
@@ -230,11 +208,11 @@
                 padding: 10px;
             }
 
-            #guess-container {
-                gap: 5px;
+            /* #guess-container {
+                gap: 105px;
             }
 
-            /* .color-slot {
+            .color-slot {
                 width: 60px;
                 height: 60px;
             } */
@@ -248,7 +226,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Color block change</h1>
+        <h1>Color Block Change</h1>
         <div class="game-board">
             <div id="guess-container"></div>
         </div>
