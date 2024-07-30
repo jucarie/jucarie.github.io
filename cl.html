@@ -90,13 +90,12 @@
             height: 90px;
             border-radius: 15px;
             cursor: move;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s, width 0.2s, height 0.2s;
             flex-shrink: 0;
         }
 
         .color-slot:hover {
             transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
         }
 
         .color-slot.over {
@@ -106,8 +105,26 @@
         .color-slot.selected, .color-slot.clicked {
             border: 3px solid #fff;
             opacity: 0.6;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 15px;
+            width: 84px;
+            height: 84px;
         }
+
+        .color-slot.fade-out {
+            opacity: 0;
+        }
+
+        .color-slot.fade-in {
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
 
         .setup-panel, .give-up-panel {
             display: none;
@@ -274,6 +291,18 @@
             updateCorrectPositions();
         }
 
+        // function updateDisplay() {
+        //     const guessContainer = document.getElementById('guess-container');
+        //     guessContainer.innerHTML = '';
+        //     currentGuess.forEach((color, index) => {
+        //         const colorSlot = document.createElement('div');
+        //         colorSlot.classList.add('color-slot');
+        //         colorSlot.style.backgroundColor = color;
+        //         colorSlot.setAttribute('data-index', index);
+        //         colorSlot.addEventListener('click', selectBlock);
+        //         guessContainer.appendChild(colorSlot);
+        //     });
+        // }
         function updateDisplay() {
             const guessContainer = document.getElementById('guess-container');
             guessContainer.innerHTML = '';
@@ -286,23 +315,65 @@
                 guessContainer.appendChild(colorSlot);
             });
         }
+        // function selectBlock(ev) {
+        //     const clickedBlock = ev.target;
+        //     if (selectedBlock === null) {
+        //         selectedBlock = clickedBlock;
+        //         clickedBlock.classList.add('selected');
+        //     } else {
+        //         const fromIndex = parseInt(selectedBlock.getAttribute('data-index'));
+        //         const toIndex = parseInt(clickedBlock.getAttribute('data-index'));
+        //         if (fromIndex !== toIndex) {
+        //             [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
+        //             updateDisplay();
+        //             updateCorrectPositions();
+        //         }
+        //         selectedBlock.classList.remove('selected');
+        //         selectedBlock = null;
+        //     }
+        // }
 
         function selectBlock(ev) {
             const clickedBlock = ev.target;
             if (selectedBlock === null) {
                 selectedBlock = clickedBlock;
                 clickedBlock.classList.add('selected');
+                clickedBlock.style.boxShadow = `0 0 15px ${clickedBlock.style.backgroundColor}`;
             } else {
                 const fromIndex = parseInt(selectedBlock.getAttribute('data-index'));
                 const toIndex = parseInt(clickedBlock.getAttribute('data-index'));
                 if (fromIndex !== toIndex) {
-                    [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
-                    updateDisplay();
-                    updateCorrectPositions();
+                    swapBlocks(fromIndex, toIndex);
                 }
                 selectedBlock.classList.remove('selected');
+                selectedBlock.style.boxShadow = '';
                 selectedBlock = null;
             }
+        }
+
+        function swapBlocks(fromIndex, toIndex) {
+            const fromBlock = document.querySelector(`.color-slot[data-index="${fromIndex}"]`);
+            const toBlock = document.querySelector(`.color-slot[data-index="${toIndex}"]`);
+
+            fromBlock.classList.add('fade-out');
+            toBlock.classList.add('fade-out');
+
+            setTimeout(() => {
+                [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
+                updateDisplay();
+                updateCorrectPositions();
+
+                const newFromBlock = document.querySelector(`.color-slot[data-index="${fromIndex}"]`);
+                const newToBlock = document.querySelector(`.color-slot[data-index="${toIndex}"]`);
+
+                newFromBlock.classList.add('fade-in');
+                newToBlock.classList.add('fade-in');
+
+                setTimeout(() => {
+                    newFromBlock.classList.remove('fade-in');
+                    newToBlock.classList.remove('fade-in');
+                }, 300);
+            }, 300);
         }
 
         function updateCorrectPositions() {
