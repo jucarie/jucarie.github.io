@@ -43,6 +43,8 @@
         }
 
         .game-container {
+            touch-action: manipulation;
+            user-select: none;
             background-color: rgba(30, 30, 30, 0.9);
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -105,10 +107,9 @@
         }
 
         .color-slot {
-            width: 90px;
-            height: 90px;
+            width: 60px;
+            height: 60px;
             border-radius: 15px;
-            cursor: move;
             transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s, width 0.2s, height 0.2s;
             flex-shrink: 0;
         }
@@ -122,8 +123,8 @@
         }
 
         .color-slot.selected, .color-slot.clicked {
-            border: 3px solid #fff;
-            opacity: 0.6;
+            /* border: 3px solid #fff; */
+            /* opacity: 0.6; */
             box-shadow: 0 0 15px;
             width: 84px;
             height: 84px;
@@ -252,7 +253,6 @@
             <div id="guess-container"></div>
         </div>
         <div class="info-panel">
-            <!-- <p id="result"></p> -->
             <p id="correct-positions"></p>
             <button id="new-game">Joc Nou</button>
             <button id="toggle-options">Game options</button>
@@ -383,7 +383,6 @@
             const correctPositionsElement = document.getElementById('correct-positions');
             correctPositionsElement.textContent = `Poziții corecte: ${correctPositions} / ${blockCount}`;
             if (correctPositions === blockCount) {
-                // resultElement.textContent = 'Felicitări! Ai rezolvat puzzle-ul!';
                 document.querySelectorAll('.color-slot').forEach(slot => {
                     slot.removeEventListener('click', selectBlock);
                 });
