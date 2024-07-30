@@ -243,7 +243,7 @@
             <div id="guess-container"></div>
         </div>
         <div class="info-panel">
-            <p id="result"></p>
+            <!-- <p id="result"></p> -->
             <p id="correct-positions"></p>
             <button id="new-game">Joc Nou</button>
             <button id="toggle-options">Game options</button>
@@ -261,8 +261,8 @@
     </div>
     <div id="winModal" class="modal">
         <div class="modal-content">
-            <h2>Bună treabă!</h2>
-            <p>Ai dominat runda și ai câștigat!</p>
+            <!-- <h2>Bună treabă!</h2> -->
+            <p>Ai câștigat tura! Bună treabă!</p>
              <!-- <p>Ai dominat runda și ai câștigat! </p> -->
             <button id="okButton">OK</button>
         </div>
@@ -282,7 +282,6 @@
         function initializeGame() {
             setupPanel.style.display = 'none';
             giveUpPanel.style.display = 'none';
-
             secretSequence = [];
             const availableColors = [...colors];
             for (let i = 0; i < blockCount; i++) {
@@ -290,10 +289,19 @@
                 secretSequence.push(availableColors[randomIndex]);
                 availableColors.splice(randomIndex, 1);
             }
-            currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
+            
+            do {
+                currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
+            } while (arraysEqual(currentGuess, secretSequence));
+
+            console.log(currentGuess);
+            console.log(secretSequence);
             updateDisplay();
-            document.getElementById('result').textContent = 'Schimbă culorile pentru a potrivi secvența secretă!';
             updateCorrectPositions();
+        }
+
+        function arraysEqual(arr1, arr2) {
+            return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
         }
 
         function selectBlock(ev) {
@@ -366,7 +374,7 @@
             const correctPositionsElement = document.getElementById('correct-positions');
             correctPositionsElement.textContent = `Poziții corecte: ${correctPositions} / ${blockCount}`;
             if (correctPositions === blockCount) {
-                resultElement.textContent = 'Felicitări! Ai rezolvat puzzle-ul!';
+                // resultElement.textContent = 'Felicitări! Ai rezolvat puzzle-ul!';
                 document.querySelectorAll('.color-slot').forEach(slot => {
                     slot.removeEventListener('click', selectBlock);
                 });
