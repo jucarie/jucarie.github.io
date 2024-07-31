@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color block change</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, 
+                #1a1a2e 0%, 
+                #16213e 25%, 
+                #0f3460 50%, 
+                #1a1a2e 75%, 
+                #16213e 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .game-container {
+            touch-action: manipulation;
+            user-select: none;
+            background-color: rgba(30, 30, 30, 0.9);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            text-align: center;
+            color: #ffffff;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .setup-panel, .give-up-panel {
+            display: none;
+            background-color: #2a2a2a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .setup-panel label {
+            display: block;
+            margin-bottom: 10px;
+            color: #ffffff;
+        }
+
+        .setup-panel input {
+            width: 60px;
+            padding: 5px;
+            margin-bottom: 10px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 5px;
+        }
+
+        .game-board {
+            background-color: #2a2a2a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        #guess-container {
+            touch-action: none;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-width: 100%;
+        }
+
+        .color-slot {
+            width: 75px;
+            height: 75px;
+            border-radius: 15px;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s, width 0.2s, height 0.2s;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .color-slot:hover {
+            transform: translateY(-5px);
+        }
+
+        .color-slot.selected {
+            box-shadow: 0 0 15px;
+            width: 90px;
+            height: 90px;
+        }
+
+        .color-slot.fade-out {
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .color-slot.fade-in {
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+
+        .info-panel {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #result, #correct-positions {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background-color: #3a3a3a;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #4a4a4a;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #1e1e1e;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #555;
+            width: 300px;
+            text-align: center;
+            border-radius: 15px;
+        }
+
+        #okButton {
+            margin-top: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            .game-board {
+                padding: 10px;
+            }
+
+            /* #guess-container {
+                gap: 5px;
+            }
+
+            .color-slot {
+                width: 60px;
+                height: 60px;
+            } */
+
+            button {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Color block change</h1>
+        <div class="game-board">
+            <div id="guess-container"></div>
+        </div>
+        <div class="info-panel">
+
+            <p id="correct-positions"></p>
+            <button id="new-game">Joc Nou</button>
+            <button id="toggle-options">Game options</button>
+            <button id="toggle-give-up">Arata rezolvarea</button>
+            <div class="setup-panel">
+                <label for="block-count">Schimba numarul de culori:</label>
+                <input type="number" id="block-count" min="2" max="10" value="4">
+                <button id="start-game">Modifica</button>
+            </div>
+            <div class="give-up-panel">
+                <p>Raspunsul:</p>
+                <div id="secret-sequence"></div>
+            </div>
+        </div>
+    </div>
+    <div id="winModal" class="modal">
+        <div class="modal-content">
+            <!-- <h2>Bună treabă!</h2> -->
+            <p>Ai câștigat tura! Bună treabă!</p>
+             <!-- <p>Ai dominat runda și ai câștigat! </p> -->
+            <button id="okButton">OK</button>
+        </div>
+    </div>
+    <script>
+        const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'orange', 'pink', 'brown', 'cyan', 'magenta'];
+        let secretSequence = [];
+        let currentGuess = [];
+        let blockCount = 4;
+        let selectedBlock = null;
+
+        const giveUpPanel = document.querySelector('.give-up-panel');
+        const setupPanel = document.querySelector('.setup-panel');
+        const modal = document.getElementById('winModal');
+        const okButton = document.getElementById('okButton');
+
+        function initializeGame() {
+            setupPanel.style.display = 'none';
+            giveUpPanel.style.display = 'none';
+            secretSequence = [];
+            const availableColors = [...colors];
+            for (let i = 0; i < blockCount; i++) {
+                const randomIndex = Math.floor(Math.random() * availableColors.length);
+                secretSequence.push(availableColors[randomIndex]);
+                availableColors.splice(randomIndex, 1);
+            }
+            
+            do {
+                currentGuess = [...secretSequence].sort(() => Math.random() - 0.5);
+            } while (arraysEqual(currentGuess, secretSequence));
+
+            console.log(currentGuess);
+            console.log(secretSequence);
+            updateDisplay();
+            updateCorrectPositions();
+        }
+
+        function arraysEqual(arr1, arr2) {
+            return arr1.length === arr2.length && arr1.every((value, index) => value === arr2[index]);
+        }
+
+        function selectBlock(ev) {
+            const clickedBlock = ev.target;
+            if (selectedBlock === null) {
+                selectedBlock = clickedBlock;
+                clickedBlock.classList.add('selected');
+                clickedBlock.style.boxShadow = `0 0 15px ${clickedBlock.style.backgroundColor}`;
+            } else {
+                const fromIndex = parseInt(selectedBlock.getAttribute('data-index'));
+                const toIndex = parseInt(clickedBlock.getAttribute('data-index'));
+                if (fromIndex !== toIndex) {
+                    swapBlocks(fromIndex, toIndex);
+                }
+                selectedBlock.classList.remove('selected');
+                selectedBlock.style.boxShadow = '';
+                selectedBlock = null;
+            }
+        }
+
+        function swapBlocks(fromIndex, toIndex) {
+            const fromBlock = document.querySelector(`.color-slot[data-index="${fromIndex}"]`);
+            const toBlock = document.querySelector(`.color-slot[data-index="${toIndex}"]`);
+
+            fromBlock.classList.add('fade-out');
+            toBlock.classList.add('fade-out');
+
+            setTimeout(() => {
+                [currentGuess[fromIndex], currentGuess[toIndex]] = [currentGuess[toIndex], currentGuess[fromIndex]];
+                updateDisplay();
+                updateCorrectPositions();
+
+                const newFromBlock = document.querySelector(`.color-slot[data-index="${fromIndex}"]`);
+                const newToBlock = document.querySelector(`.color-slot[data-index="${toIndex}"]`);
+
+                newFromBlock.classList.add('fade-in');
+                newToBlock.classList.add('fade-in');
+
+                setTimeout(() => {
+                    newFromBlock.classList.remove('fade-in');
+                    newToBlock.classList.remove('fade-in');
+                    fromBlock.classList.remove('fade-out');
+                    toBlock.classList.remove('fade-out');
+                }, 300);
+            }, 300);
+        }
+
+
+        function updateDisplay() {
+            const guessContainer = document.getElementById('guess-container');
+            guessContainer.innerHTML = '';
+            currentGuess.forEach((color, index) => {
+                const colorSlot = document.createElement('div');
+                colorSlot.classList.add('color-slot');
+                colorSlot.style.backgroundColor = color;
+                colorSlot.setAttribute('data-index', index);
+                colorSlot.addEventListener('click', selectBlock);
+                guessContainer.appendChild(colorSlot);
+            });
+        }
+
+        function updateCorrectPositions() {
+            let correctPositions = 0;
+            for (let i = 0; i < blockCount; i++) {
+                if (currentGuess[i] === secretSequence[i]) {
+                    correctPositions++;
+                }
+            }
+            const resultElement = document.getElementById('result');
+            const correctPositionsElement = document.getElementById('correct-positions');
+            correctPositionsElement.textContent = `Poziții corecte: ${correctPositions} / ${blockCount}`;
+            if (correctPositions === blockCount) {
+
+                document.querySelectorAll('.color-slot').forEach(slot => {
+                    slot.removeEventListener('click', selectBlock);
+                });
+                modal.style.display = "block";
+            }
+        }
+
+        function showSecretSequence() {
+            const secretSequenceContainer = document.getElementById('secret-sequence');
+            secretSequenceContainer.innerHTML = '';
+            secretSequence.forEach(color => {
+                const secretColor = document.createElement('div');
+                secretColor.classList.add('secret-color');
+                secretColor.style.backgroundColor = color;
+                secretSequenceContainer.appendChild(secretColor);
+            });
+        }
+
+        document.getElementById('start-game').addEventListener('click', initializeGame);
+        document.getElementById('new-game').addEventListener('click', initializeGame);
+
+        document.getElementById('toggle-options').addEventListener('click', function() {
+            giveUpPanel.style.display = 'none';
+            setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        document.getElementById('toggle-give-up').addEventListener('click', function() {
+            setupPanel.style.display = 'none';
+            giveUpPanel.style.display = giveUpPanel.style.display === 'none' ? 'block' : 'none';
+            showSecretSequence();
+        });
+
+        document.getElementById('block-count').addEventListener('input', function() {
+            blockCount = parseInt(this.value);
+            if (blockCount < 2) blockCount = 2;
+            if (blockCount > 10) blockCount = 10;
+            this.value = blockCount;
+        });
+
+        okButton.onclick = function() {
+            modal.style.display = "none";
+            initializeGame();
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+                initializeGame();
+            }
+        }
+
+        window.onload = function() {
+            document.getElementById('block-count').value = blockCount;
+            initializeGame();
+        };
+    </script>
+</body>
+</html>
