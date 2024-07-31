@@ -245,10 +245,6 @@
             margin: 5px;
         }
 
-        button:hover {
-            background-color: #35bbfa;
-            color: black;
-        }
 
         .modal {
             display: none;
@@ -316,11 +312,18 @@
             }
         }
 
+        @media (hover: hover) {
+            button:hover {
+                background-color: #35bbfa;
+                color: black;
+            }
+        }
+
     </style>
 </head>
 <body>
     <div class="game-container">
-        <h1>Pigment v0.17</h1>
+        <h1>Pigment v0.17b</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
