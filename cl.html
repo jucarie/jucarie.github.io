@@ -342,7 +342,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Pigment v0.17f</h1>
+        <h1>Pigment v0.17fa</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -718,16 +718,21 @@
 
         window.matchMedia('(orientation: portrait)')
             .addListener(function (m) {
-                    alert(m)
+                    alert("portrait")
 
                 //  else {
                 //     // landscape
                 // }
             });
 
+        window.matchMedia('(orientation: portrait)').onchange = function() {
+            alert("change portrait")
+
+        };
+
         window.matchMedia('(orientation: landscape)')
             .addListener(function (m) {
-                    alert(m)
+                    alert("landscape")
             });
 
         function showGiveUpPanel() {
