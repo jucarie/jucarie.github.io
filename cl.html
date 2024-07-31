@@ -342,7 +342,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Pigment v0.17e</h1>
+        <h1>Pigment v0.17ea</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -503,15 +503,10 @@
   
         function selectBlock(ev) {
             const clickedBlock = ev.target;
-            const clickedColor = clickedBlock.style.backgroundColor;
-
-            // Change the body background color
-            document.body.style.background = clickedColor;
-
             if (selectedBlock === null) {
                 selectedBlock = clickedBlock;
                 clickedBlock.classList.add('selected');
-                clickedBlock.style.boxShadow = `0 0 15px ${clickedColor}`;
+                clickedBlock.style.boxShadow = `0 0 15px ${clickedBlock.style.backgroundColor}`;
             } else {
                 const fromIndex = parseInt(selectedBlock.getAttribute('data-index'));
                 const toIndex = parseInt(clickedBlock.getAttribute('data-index'));
@@ -708,34 +703,15 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            alert(navigator.userAgent)
             if (/Mobi|Android/i.test(navigator.userAgent)) {
-                let initialTouchX = null;
-                let initialTouchY = null;
+                let initialOrientation = window.orientation;
 
-                document.body.addEventListener('touchstart', (ev) => {
-                    const touch = ev.touches[0];
-                    initialTouchX = touch.clientX;
-                    initialTouchY = touch.clientY;
-                });
-
-                document.body.addEventListener('touchmove', (ev) => {
-                    if (initialTouchX !== null && initialTouchY !== null) {
-                        const touch = ev.touches[0];
-                        const deltaX = touch.clientX - initialTouchX;
-                        const deltaY = touch.clientY - initialTouchY;
-
-                        // Customize the threshold as needed
-                        if (Math.abs(deltaX) > 100 || Math.abs(deltaY) > 100) {
-                            showGiveUpPanel();
-                            initialTouchX = null;
-                            initialTouchY = null;
-                        }
+                window.addEventListener('orientationchange', () => {
+                    if (window.orientation !== initialOrientation) {
+                        showGiveUpPanel();
+                        initialOrientation = window.orientation;
                     }
-                });
-
-                document.body.addEventListener('touchend', () => {
-                    initialTouchX = null;
-                    initialTouchY = null;
                 });
             }
         });
