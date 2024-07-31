@@ -13,7 +13,7 @@
             color: #c6daf1;
         }
 
-        body {
+        /* body {
             font-family: 'Roboto', sans-serif;
             background: linear-gradient(135deg, 
                 #1a1a2e 0%, 
@@ -42,6 +42,20 @@
             100% {
                 background-position: 0% 50%;
             }
+        } */
+
+        body {
+            font-family: 'Roboto', sans-serif;
+
+            background-size: 400% 400%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        
+
+            background-color: #0c1428; /* This color complements #080d23 and #1a203a */
         }
 
         .game-container {
@@ -272,6 +286,18 @@
             margin-top: 20px;
         }
 
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        } 
+
         @media (max-width: 480px) {
             .game-container {
                 padding: 15px;
@@ -306,13 +332,26 @@
         }
 
         @media (min-width: 481px) {
+
+            body {
+                background: linear-gradient(135deg, 
+                    #1a1a2e 0%, 
+                    #16213e 25%, 
+                    #0f3460 50%, 
+                    #1a1a2e 75%, 
+                    #16213e 100%);
+                background-size: 400% 400%;
+                animation: gradientBG 15s ease infinite;
+            }
+
+        }
+
+
+        @media (hover: hover) {
             .color-slot:hover {
                 transform: scale(1.12);
                 z-index: 1;
             }
-        }
-
-        @media (hover: hover) {
             button:hover {
                 background-color: #35bbfa;
                 color: black;
@@ -323,7 +362,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Pigment v0.17b</h1>
+        <h1>Pigment v0.17d</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -500,6 +539,30 @@
             }
         }
 
+
+        // function selectBlock(ev) {
+        //     const clickedBlock = ev.target;
+        //     const clickedColor = clickedBlock.style.backgroundColor;
+            
+        //     // Change the body background color
+        //     document.body.style.background = clickedColor;
+
+        //     if (selectedBlock === null) {
+        //         selectedBlock = clickedBlock;
+        //         clickedBlock.classList.add('selected');
+        //         clickedBlock.style.boxShadow = `0 0 15px ${clickedColor}`;
+        //     } else {
+        //         const fromIndex = parseInt(selectedBlock.getAttribute('data-index'));
+        //         const toIndex = parseInt(clickedBlock.getAttribute('data-index'));
+        //         if (fromIndex !== toIndex) {
+        //             swapBlocks(fromIndex, toIndex);
+        //         }
+        //         selectedBlock.classList.remove('selected');
+        //         selectedBlock.style.boxShadow = '';
+        //         selectedBlock = null;
+        //     }
+        // }
+
         function swapBlocks(fromIndex, toIndex) {
             const fromBlock = document.querySelector(`.color-slot[data-index="${fromIndex}"]`);
             const toBlock = document.querySelector(`.color-slot[data-index="${toIndex}"]`);
@@ -657,6 +720,8 @@
                 }
             }, 3000);
         }
+
+
 
         document.getElementById('hint-button').addEventListener('click', provideHint);
         
