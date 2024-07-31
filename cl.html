@@ -10,6 +10,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            color: #c6daf1;
         }
 
         body {
@@ -46,7 +47,7 @@
         .game-container {
             touch-action: manipulation;
             user-select: none;
-            background-color: rgba(30, 30, 30, 0.9);
+            background-color: #080d23;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             padding: 30px;
@@ -56,9 +57,23 @@
 
         h1 {
             text-align: center;
-            color: #ffffff;
+            color: #00b4ff;
             margin-bottom: 10px;
             font-size: 24px;
+        }
+
+        .game-board {
+            touch-action: manipulation;
+            background-color: #1a203a;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            margin-top: 20px;
+            min-height: 200px; 
+            display: flex;
+            flex-direction: column; 
+            align-items: center;
+            justify-content: center;
         }
 
         .setup-panel {
@@ -111,20 +126,6 @@
             background-color: #4a4a4a;
         }
 
-        .game-board {
-            touch-action: manipulation;
-            background-color: #2a2a2a;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            margin-top: 20px;
-            min-height: 200px; 
-            display: flex;
-            flex-direction: column; 
-            align-items: center;
-            justify-content: center;
-        }
-
         #guess-container {
             display: flex;
             flex-direction: row;
@@ -166,7 +167,7 @@
 
         .setup-panel, .give-up-panel {
             display: none;
-            background-color: #2a2a2a;
+            background-color: #1a203a;;
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 20px;
@@ -233,7 +234,7 @@
         }
 
         button {
-            background-color: #3a3a3a;
+            background-color: #1a203a;
             color: #ffffff;
             border: none;
             padding: 10px 20px;
@@ -245,7 +246,8 @@
         }
 
         button:hover {
-            background-color: #4a4a4a;
+            background-color: #35bbfa;
+            color: black;
         }
 
         .modal {
@@ -318,7 +320,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Pigment v0.16</h1>
+        <h1>Pigment v0.17</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -331,6 +333,7 @@
         <div class="info-panel">
             <button id="new-game">Joc Nou</button>
             <button id="toggle-options">Game options</button>
+            <button id="hint-button">Indiciu</button>
             <button id="toggle-give-up">Arata rezolvarea</button>
             <div class="setup-panel">
                 <div class="input-group">
@@ -610,7 +613,50 @@
         }
 
 
+        function provideHint() {
+            let firstFalseIndex = -1;
+            let secretColorToFind = null;
+            let secondHighlightIndex = -1;
 
+            // Find the first false match and the color to find
+            for (let i = 0; i < blockCount; i++) {
+                if (currentGuess[i] !== secretSequence[i]) {
+                    firstFalseIndex = i;
+                    secretColorToFind = secretSequence[i];
+                    break;
+                }
+            }
+
+            if (firstFalseIndex === -1) {
+                showModal("Toate pozițiile sunt corecte. Nu este nevoie de indicii!");
+                return;
+            }
+
+            secondHighlightIndex = currentGuess.indexOf(secretColorToFind);
+
+            // Highlight the blocks
+            highlightBlocks(firstFalseIndex, secondHighlightIndex);
+
+        }
+
+        function highlightBlocks(index1, index2) {
+            const blocks = document.querySelectorAll('.color-slot');
+            blocks[index1].style.boxShadow = '0 0 18px #ffffff'; // Red highlight
+            if (index2 !== -1) {
+                blocks[index2].style.boxShadow = '0 0 18px #ffffff'; // Green highlight
+            }
+
+            // Remove highlights after 3 seconds
+            setTimeout(() => {
+                blocks[index1].style.boxShadow = '';
+                if (index2 !== -1) {
+                    blocks[index2].style.boxShadow = '';
+                }
+            }, 3000);
+        }
+
+        document.getElementById('hint-button').addEventListener('click', provideHint);
+        
         document.getElementById('new-game').addEventListener('click', initializeGame);
 
         document.getElementById('random-start').addEventListener('change', function() {
