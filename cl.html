@@ -145,7 +145,8 @@
             transition: opacity 0.3s;
         }
 
-        .setup-panel, .give-up-panel {
+        /* .setup-panel, .give-up-panel { */
+        .setup-panel {
             display: none;
             background-color: #1a203a;;
             border-radius: 15px;
@@ -155,12 +156,36 @@
             text-align: center;
         }
 
+        #give-up-panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #1a203a;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            font-size: 24px;
+            text-align: center;
+            flex-direction: column;
+        }
 
+        #give-up-panel p {
+            margin-bottom: 20px;
+        }
 
-        #secret-sequence {
+        /* #secret-sequence {
             text-align: center;
             margin-top: 10px;
-            font-size: 0; /* Remove space between inline-block elements */
+            font-size: 0; 
+        } */
+        #secret-sequence {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .secret-color {
@@ -266,7 +291,7 @@
         } 
 
         @media (max-width: 480px) {
-            #give-up-panel {
+            #give-up-panelXXXXX {
                 display: none;
                 position: fixed;
                 top: 0;
@@ -342,7 +367,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Pigment v0.17c</h1>
+        <h1>Pigment v0.17ca</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -375,6 +400,7 @@
             <div class="give-up-panel">
                 <p>Raspunsul:</p>
                 <div id="secret-sequence"></div>
+                <button id="close-give-up">Închide</button>
             </div>
         </div>
     </div>
@@ -385,6 +411,7 @@
         let blockCount = 4;
         let correctStart = null;
         let selectedBlock = null;
+        let initialOrientation = null;
         let isRandomStart = true;
 
         const giveUpPanel = document.querySelector('.give-up-panel');
@@ -606,6 +633,18 @@
             }
         }
 
+        // function showSecretSequence() {
+        //     const secretSequenceContainer = document.getElementById('secret-sequence');
+        //     secretSequenceContainer.innerHTML = '';
+        //     secretSequence.forEach(color => {
+        //         const secretColor = document.createElement('div');
+        //         secretColor.classList.add('secret-color');
+        //         secretColor.style.backgroundColor = color;
+        //         secretSequenceContainer.appendChild(secretColor);
+        //     });
+        // }
+
+        // Modify the showSecretSequence function to clear previous content
         function showSecretSequence() {
             const secretSequenceContainer = document.getElementById('secret-sequence');
             secretSequenceContainer.innerHTML = '';
@@ -702,61 +741,38 @@
             }, 3000);
         }
 
-        // document.addEventListener('DOMContentLoaded', () => {
-        //     alert(window.orientation)
-        //     if (/Mobi|Android/i.test(navigator.userAgent)) {
-        //         let initialOrientation = window.orientation;
 
-        //         // window.addEventListener('orientationchange', () => {
-        //         //     if (window.orientation !== initialOrientation) {
-        //         //         showGiveUpPanel();
-        //         //         initialOrientation = window.orientation;
-        //         //     }
-        //         // });
+        // screen.orientation.addEventListener("change", (event) => {
+        //     if (event.target.type !== initialOrientation) {
+        //         alert("ii scv")
+        //         giveUpPanel.style.display = 'flex';
+        //         showSecretSequence();
+        //     } else {
+        //         alert("ii initial")
+        //         giveUpPanel.style.display = 'none';
         //     }
         // });
 
-        // window.matchMedia('(orientation: portrait)')
-        //     .addListener(function (m) {
-        //             alert("portrait")
-
-        //         //  else {
-        //         //     // landscape
-        //         // }
-        //     });
-
-        // window.matchMedia('(orientation: portrait)').onchange = function() {
-        //     alert("change portrait")
-
-        // };
-
-        // window.matchMedia('(orientation: landscape)')
-        //     .addListener(function (m) {
-        //             alert("landscape")
-        //     });
-
-        // function showGiveUpPanel() {
-        //     const giveUpPanel = document.getElementById('give-up-panel');
-        //     if (giveUpPanel) {
-        //         giveUpPanel.style.display = 'flex';  // Change to flex to center content
-        //     }
-        // }
-
-
-        screen.orientation.addEventListener("change", (event) => {
-            const currentOrientation = event.target.type;
-            // const angle = event.target.angle;
-            // alert(screen.orientation.type)
-            // alert(`ScreenOrientation change: ${type}, ${angle} degrees.`);
-            if (currentOrientation !== initialOrientation) {
-                alert("ii scv")
+        function handleOrientationChange() {
+            const giveUpPanel = document.getElementById('give-up-panel');
+            if (screen.orientation.type !== initialOrientation) {
                 giveUpPanel.style.display = 'flex';
+                showSecretSequence();
             } else {
-                alert("ii initial")
                 giveUpPanel.style.display = 'none';
             }
-            // "landscape-primary" 
-            //
+        }
+
+        window.addEventListener('load', function() {
+            initialOrientation = screen.orientation.type;
+            document.getElementById('block-count').value = blockCount;
+            initializeGame();
+
+            screen.orientation.addEventListener("change", handleOrientationChange);
+        });
+
+        document.getElementById('close-give-up').addEventListener('click', function() {
+            document.getElementById('give-up-panel').style.display = 'none';
         });
 
 
@@ -826,7 +842,7 @@
             initializeGame();
         });
 
-        let initialOrientation = null;
+        
         window.onload = function() {
             let initialOrientation = screen.orientation.type;
             document.getElementById('block-count').value = blockCount;
