@@ -342,7 +342,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Pigment v0.17ec</h1>
+        <h1>Pigment v0.17f</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -702,25 +702,24 @@
             }, 3000);
         }
 
-        // document.addEventListener('DOMContentLoaded', () => {
-        //     alert(navigator.userAgent)
-        //     if (/Mobi|Android/i.test(navigator.userAgent)) {
-        //         let initialOrientation = window.orientation;
+        document.addEventListener('DOMContentLoaded', () => {
+            alert(navigator.userAgent)
+            if (/Mobi|Android/i.test(navigator.userAgent)) {
+                let initialOrientation = window.orientation;
 
-        //         window.addEventListener('orientationchange', () => {
-        //             if (window.orientation !== initialOrientation) {
-        //                 showGiveUpPanel();
-        //                 initialOrientation = window.orientation;
-        //             }
-        //         });
-        //     }
-        // });
+                // window.addEventListener('orientationchange', () => {
+                //     if (window.orientation !== initialOrientation) {
+                //         showGiveUpPanel();
+                //         initialOrientation = window.orientation;
+                //     }
+                // });
+            }
+        });
 
         window.matchMedia('(orientation: portrait)')
             .addListener(function (m) {
-                if (m.matches) {
-                    alert(111)
-                }
+                    alert(m)
+
                 //  else {
                 //     // landscape
                 // }
@@ -728,9 +727,7 @@
 
         window.matchMedia('(orientation: landscape)')
             .addListener(function (m) {
-                if (m.matches) {
-                    alert(222)
-                }
+                    alert(m)
             });
 
         function showGiveUpPanel() {
@@ -809,6 +806,7 @@
 
 
         window.onload = function() {
+            alert("onload")
             document.getElementById('block-count').value = blockCount;
             initializeGame();
         };
