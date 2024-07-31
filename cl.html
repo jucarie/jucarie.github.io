@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Color block change</title>
+    <title>Pigment game</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -207,6 +207,7 @@
         }
 
         #correct-positions-container {
+            touch-action: manipulation;
             font-size: 36px;
             font-weight: bold;
             color: #ffffff;
@@ -306,7 +307,6 @@
             }
         }
 
-
         @media (min-width: 481px) {
             .color-slot:hover {
                 transform: scale(1.12);
@@ -318,7 +318,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Color block change</h1>
+        <h1>Pigment v0.16</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -521,6 +521,7 @@
             }, 300);
         }
 
+
         function updateDisplay() {
             const guessContainer = document.getElementById('guess-container');
             guessContainer.innerHTML = '';
@@ -533,7 +534,6 @@
                 guessContainer.appendChild(colorSlot);
             });
         }
-
 
         function updateCorrectPositions() {
             let correctPositions = 0;
@@ -566,7 +566,6 @@
                 secretSequenceContainer.appendChild(secretColor);
             });
         }
-
 
         function showModal(message, isError = false, startGame = false) {
             const existingModal = document.getElementById('customModal');
@@ -610,6 +609,8 @@
             };
         }
 
+
+
         document.getElementById('new-game').addEventListener('click', initializeGame);
 
         document.getElementById('random-start').addEventListener('change', function() {
@@ -621,14 +622,12 @@
             }
         });
 
-
         document.getElementById('toggle-options').addEventListener('click', function() {
             giveUpPanel.style.display = 'none';
             setupPanel.style.display = setupPanel.style.display === 'none' ? 'block' : 'none';
             const isRandomStart = document.getElementById('random-start').checked;
             document.getElementById('correct-start').disabled = isRandomStart;
         });
-
 
         document.getElementById('toggle-give-up').addEventListener('click', function() {
             setupPanel.style.display = 'none';
@@ -675,6 +674,7 @@
             }
             initializeGame();
         });
+
 
         window.onload = function() {
             document.getElementById('block-count').value = blockCount;
