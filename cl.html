@@ -155,26 +155,6 @@
             text-align: center;
         }
 
-        #give-up-panel {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #1a203a;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-            font-size: 24px;
-            text-align: center;
-            flex-direction: column;
-        }
-
-        #give-up-panel p {
-            margin-bottom: 20px;
-        }
-
         #secret-sequence {
             text-align: center;
             margin-top: 10px;
@@ -311,17 +291,6 @@
             border-radius: 50%;
         }
 
-        #closeSecretModal {
-            background-color: #1a203a;
-            color: #ffffff;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 25px;
-            cursor: pointer;
-        }
-
-
         @keyframes gradientBG {
             0% {
                 background-position: 0% 50%;
@@ -407,18 +376,24 @@
             }
         }
 
+        @media (pointer:none), (pointer:coarse) {
+            #toggle-give-up {
+                display: none;
+            }
+        }
+
+
     </style>
 </head>
 <body>
     <div id="secretModal" style="display: none;">
         <div class="modal-content">
-            <h2>Secvența secretă</h2>
+            <h2>"Easter egg"-ul cu raspunsul secret:</h2>
             <div id="secretSequenceContainer"></div>
-            <button id="closeSecretModal">Închide</button>
         </div>
     </div>
     <div class="game-container">
-        <h1>Pigment v0.17cb</h1>
+        <h1>Pigment v0.18</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -780,17 +755,6 @@
         }
 
 
-        // screen.orientation.addEventListener("change", (event) => {
-        //     if (event.target.type !== initialOrientation) {
-        //         alert("ii scv")
-        //         giveUpPanel.style.display = 'flex';
-        //         showSecretSequence();
-        //     } else {
-        //         alert("ii initial")
-        //         giveUpPanel.style.display = 'none';
-        //     }
-        // });
-
 
         function showSecretModal() {
             const modal = document.getElementById('secretModal');
@@ -820,9 +784,7 @@
         }
 
         screen.orientation.addEventListener("change", handleOrientationChange);
-        document.getElementById('closeSecretModal').addEventListener('click', hideSecretModal);
-
-
+        // document.getElementById('closeSecretModal').addEventListener('click', hideSecretModal);
 
         document.getElementById('hint-button').addEventListener('click', provideHint);
         
