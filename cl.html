@@ -342,7 +342,7 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>Pigment v0.17fb</h1>
+        <h1>Pigment v0.17c</h1>
         <div class="game-board">
             <div id="correct-positions-container">
                 <span id="correct-positions-count">0</span>
@@ -742,11 +742,21 @@
         //     }
         // }
 
+
         screen.orientation.addEventListener("change", (event) => {
-            const type = event.target.type;
-            const angle = event.target.angle;
-            alert(screen.orientation.type)
-            alert(`ScreenOrientation change: ${type}, ${angle} degrees.`);
+            const currentOrientation = event.target.type;
+            // const angle = event.target.angle;
+            // alert(screen.orientation.type)
+            // alert(`ScreenOrientation change: ${type}, ${angle} degrees.`);
+            if (currentOrientation !== initialOrientation) {
+                alert("ii scv")
+                giveUpPanel.style.display = 'flex';
+            } else {
+                alert("ii initial")
+                giveUpPanel.style.display = 'none';
+            }
+            // "landscape-primary" 
+            //
         });
 
 
@@ -816,9 +826,9 @@
             initializeGame();
         });
 
-
+        let initialOrientation = null;
         window.onload = function() {
-            alert("onload")
+            let initialOrientation = screen.orientation.type;
             document.getElementById('block-count').value = blockCount;
             initializeGame();
         };
