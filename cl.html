@@ -60,15 +60,6 @@
             font-size: 24px;
         }
 
-        /* .setup-panel {
-            background-color: rgba(42, 42, 42, 0.9);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            margin-top: 20px;
-            text-align: center;
-        } */
-
         .setup-panel {
             display: none;
             background-color: rgba(42, 42, 42, 0.9);
@@ -99,7 +90,6 @@
             margin-right: 10px;
         }
 
-
         .setup-panel .input-group {
             margin-bottom: 15px;
         }
@@ -120,8 +110,8 @@
             background-color: #4a4a4a;
         }
 
-
         .game-board {
+            touch-action: manipulation;
             background-color: #2a2a2a;
             border-radius: 15px;
             padding: 20px;
@@ -132,7 +122,7 @@
             justify-content: center;
         }
 
-        #guess-container {
+        /* #guess-container {
             touch-action: manipulation;
             display: flex;
             flex-direction: row;
@@ -141,30 +131,48 @@
             flex-wrap: wrap;
             gap: 10px;
             max-width: 100%;
+        } */
+
+        #guess-container {
+            touch-action: manipulation;
+            display: flex;
+            grid-template-columns: repeat(auto-fit, 84px);
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            max-width: 100%;
         }
 
-        .color-slot {
+        /* .color-slot {
             width: 75px;
             height: 75px;
             border-radius: 15px;
             transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s, width 0.2s, height 0.2s;
             flex-shrink: 0;
+        } */
+
+        
+        .color-slot {
+            width: 75px;
+            height: 75px;
+            border-radius: 15px;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+            margin: auto;
         }
 
-        .color-slot:hover {
-            transform: translateY(-5px);
-        }
 
         .color-slot.over {
             opacity: 0.7;
         }
 
-        .color-slot.selected {
-            /* border: 3px solid #fff;
-            opacity: 0.6; */
-            /* box-shadow: 0 0 15px; */
+        /* .color-slot.selected {
             width: 84px;
             height: 84px;
+        } */
+
+        .color-slot.selected {
+            transform: scale(1.12);
+            box-shadow: 0 0 15px;
         }
 
         .color-slot.fade-out {
@@ -176,7 +184,6 @@
             opacity: 1;
             transition: opacity 0.3s;
         }
-
 
         .setup-panel, .give-up-panel {
             display: none;
@@ -275,15 +282,6 @@
                 padding: 10px;
             }
 
-            /* #guess-container {
-                gap: 5px;
-            }
-
-            .color-slot {
-                width: 60px;
-                height: 60px;
-            } */
-
             button {
                 padding: 8px 16px;
                 font-size: 14px;
@@ -298,14 +296,35 @@
                 height: 25px;
                 margin: 3px;
             }
+            
+            #guess-container {
+                grid-template-columns: repeat(auto-fit, 70px);
+                gap: 5px;
+            }
+
+            .color-slot {
+                width: 60px;
+                height: 60px;
+            }
+
+            .color-slot:hover,
+            .color-slot.selected {
+                transform: scale(1.1);
+            }
         }
 
-        /* @media (min-width: 481px) {
-            .secret-color:nth-child(n+9) {
+        @media (min-width: 481px) {
+            /* .secret-color:nth-child(n+9) {
                 width: 25px;
                 height: 25px;
+            } */
+
+            .color-slot:hover {
+                transform: scale(1.12);
             }
-        } */
+
+        }
+
     </style>
 </head>
 <body>
@@ -360,7 +379,7 @@
 
         const giveUpPanel = document.querySelector('.give-up-panel');
         const setupPanel = document.querySelector('.setup-panel');
-        const modal = document.getElementById('winModal');
+        // const modal = document.getElementById('winModal');
         const okButton = document.getElementById('okButton');
 
         function initializeGame() {
@@ -545,7 +564,8 @@
                 document.querySelectorAll('.color-slot').forEach(slot => {
                     slot.removeEventListener('click', selectBlock);
                 });
-                modal.style.display = "block";
+
+                showModal('Ai câștigat tura! Bună treabă!', false, true);
             }
         }
 
@@ -560,11 +580,58 @@
             });
         }
 
+
+        function showModal(message, isError = false, startGame = false) {
+            const existingModal = document.getElementById('customModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'customModal';
+            modal.className = 'modal';
+            modal.style.display = 'block';
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+
+            const messageElement = document.createElement('p');
+            messageElement.textContent = message;
+            if (isError) {
+                messageElement.style.color = '#ff0000';
+            }
+
+            const okButton = document.createElement('button');
+            okButton.textContent = 'OK';
+            okButton.id = "okButton";
+            okButton.onclick = function() {
+                modal.style.display = 'none';
+                if (startGame) {
+                    initializeGame();
+                }
+            };
+
+            modalContent.appendChild(messageElement);
+            modalContent.appendChild(okButton);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
         document.getElementById('new-game').addEventListener('click', initializeGame);
 
         document.getElementById('random-start').addEventListener('change', function() {
             isRandomStart = this.checked;
-            document.getElementById('correct-start').disabled = isRandomStart;
+            const correctStartInput = document.getElementById('correct-start');
+            correctStartInput.disabled = isRandomStart;
+            if (isRandomStart) {
+                correctStartInput.value = '';
+            }
         });
 
         document.getElementById('toggle-options').addEventListener('click', function() {
@@ -595,24 +662,25 @@
         document.getElementById('start-game').addEventListener('click', function() {
             blockCount = parseInt(document.getElementById('block-count').value);
             correctStart = document.getElementById('correct-start').value === '' ? 0 : parseInt(document.getElementById('correct-start').value);
+            isRandomStart = document.getElementById('random-start').checked;
+
+            if (!isRandomStart) {
+                if (correctStart === blockCount) {
+                    showModal('Numărul de poziții corecte nu poate fi egal cu numărul total de blocuri.', true);
+                    return;
+                }
+                if (correctStart > (blockCount - 2)) {
+                    showModal(`Numărul de poziții corecte trebuie să fie mai mic sau egal cu ${blockCount - 2}.`, true);
+                    return;
+                }
+            }
+
             if (correctStart > blockCount) {
                 correctStart = blockCount;
                 document.getElementById('correct-start').value = correctStart;
             }
             initializeGame();
         });
-
-        okButton.onclick = function() {
-            modal.style.display = "none";
-            initializeGame();
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-                initializeGame();
-            }
-        }
 
         window.onload = function() {
             document.getElementById('block-count').value = blockCount;
