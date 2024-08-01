@@ -67,13 +67,16 @@
         }
 
         .tile.selected {
+            border: 0;
             transform: scale(1.1);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 18px white;
             z-index: 2;
         }
 
         .tile.adjacent {
-            border: 2px dashed #ffd700;
+            border: 0;
+            box-shadow: 0 0 13px white;
+            opacity: 0.7;
         }
 
         .tile.fade-out {
@@ -144,7 +147,7 @@
     </style>
 </head>
 <body>
-    <h1>Planetarium v0.1</h1>
+    <!-- <h1>Planetarium v0.1</h1> -->
     <div id="game-container">
         <div class="tile-container">
             <h3>Segventa de culori:</h3>
