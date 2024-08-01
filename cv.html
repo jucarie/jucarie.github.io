@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planetarium v0.1</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #121212;
+            color: #fff;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .tile {
+            width: 80px;
+            height: 80px;
+            margin: 5px;
+            cursor: pointer;
+            border: 2px solid #333;
+            border-radius: 50%;
+            transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
+        }
+        #tiles, #secret-tiles {
+            display: flex;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+        .tile-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+            margin-top: 50px;
+        }
+        .tile.selected {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px white;
+            z-index: 2;
+        }
+        .tile.adjacent {
+            box-shadow: 0 0 15px rgba(255,255,0,0.5);
+            opacity: 0.7;
+        }
+        .tile.fade-out {
+            opacity: 0;
+        }
+        .tile.fade-in {
+            opacity: 1;
+        }
+        #game-board {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #tiles {
+            z-index: 1;
+        }
+        #arc-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 10; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.5); 
+        }
+
+        .modal-content {
+            background-color: #222;
+            margin: 15% auto; 
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; 
+            max-width: 400px;
+            text-align: center;
+            color: #fff;
+            border-radius: 5px;
+        }
+
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+
+
+    </style>
+</head>
+<body>
+    <h1>Planetarium v0.1</h1>
+    <div id="game-container">
+        <div id="game-board">
+            <canvas id="arc-canvas"></canvas>
+            <div id="tiles"></div>
+        </div>
+        <div class="tile-container">
+            <h3>Segventa de culori:</h3>
+            <div id="secret-tiles"></div>
+        </div>
+        <div id="message"></div>
+        <button id="new-game">New Game</button>
+    </div>
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-modal">&times;</span>
+            <p>Ok! Ai terminat</p>
+            <button id="ok-button">OK</button>
+        </div>
+    </div>
+    <script>
+        const colors = ['#ff073a', 'blue', '#39ff14', 'yellow', '#9400ff', 'orange', 'pink', 'brown', '#00f9ff', 'magenta'];
+        let currentTiles = [];
+        let secretTiles = [];
+        let moveCount = 0;
+        let blockCount = 5;
+        let selectedTile = null;
+        const lastTile = null;
+
+        function generateTiles() {
+            secretTiles = [];
+            const availableColors = [...colors];
+            
+            // Generate secret tiles
+            for (let i = 0; i < blockCount; i++) {
+                const randomIndex = Math.floor(Math.random() * availableColors.length);
+                secretTiles.push(availableColors[randomIndex]);
+                availableColors.splice(randomIndex, 1);
+            }
+            
+            // Generate current tiles
+            currentTiles = [...secretTiles];
+            shuffleArray(currentTiles);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+
+        function renderTiles() {
+            renderTileSet('tiles', currentTiles, true);
+            renderTileSet('secret-tiles', secretTiles, false);
+            drawArc();
+        }
+
+
+        function drawArc() {
+            const canvas = document.getElementById('arc-canvas');
+            const ctx = canvas.getContext('2d');
+            const tilesContainer = document.getElementById('tiles');
+            const firstTile = tilesContainer.firstChild;
+            const lastTile = tilesContainer.lastChild;
+
+            // Set canvas size
+            canvas.width = tilesContainer.offsetWidth;
+            canvas.height = tilesContainer.offsetHeight + 50; // Extra height for the arc
+
+            // Calculate arc parameters
+            const startX = firstTile.offsetLeft + firstTile.offsetWidth / 2;
+            const endX = lastTile.offsetLeft + lastTile.offsetWidth / 2;
+            const y = firstTile.offsetHeight + 25; // 25px below the tiles
+            const midX = (startX + endX) / 2;
+
+            // Draw the arc
+            ctx.beginPath();
+            ctx.moveTo(startX, y);
+            ctx.quadraticCurveTo(midX, y + 69, endX, y);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Add the text
+            ctx.font = '18px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${moveCount % 2}/2`, midX, y + 25);
+        }
+
+        function renderTileSet(containerId, tiles, clickable) {
+            const tilesContainer = document.getElementById(containerId);
+            tilesContainer.innerHTML = '';
+            tiles.forEach((color, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.style.backgroundColor = color;
+                tile.setAttribute('data-index', index);
+                if (clickable) {
+                    tile.onclick = () => selectTile(tile);
+                }
+                tilesContainer.appendChild(tile);
+            });
+        }
+
+        function selectTile(tile) {
+            const index = parseInt(tile.getAttribute('data-index'));
+            if (selectedTile === null) {
+                selectedTile = tile;
+                tile.classList.add('selected');
+                highlightAdjacentTiles(index);
+            } else {
+                const fromIndex = parseInt(selectedTile.getAttribute('data-index'));
+                const toIndex = parseInt(tile.getAttribute('data-index'));
+                if (fromIndex !== toIndex && (toIndex === fromIndex - 1 || toIndex === fromIndex + 1)) {
+                    swapTiles(fromIndex, toIndex);
+                }
+                clearHighlightAdjacentTiles(fromIndex);
+                selectedTile.classList.remove('selected');
+                selectedTile = null;
+            }
+        }
+
+        function highlightAdjacentTiles(index) {
+            const tiles = document.querySelectorAll('#tiles .tile');
+            if (index > 0) {
+                tiles[index - 1].classList.add('adjacent');
+            }
+            if (index < tiles.length - 1) {
+                tiles[index + 1].classList.add('adjacent');
+            }
+        }
+
+        function clearHighlightAdjacentTiles(index) {
+            const tiles = document.querySelectorAll('#tiles .tile');
+            if (index > 0) {
+                tiles[index - 1].classList.remove('adjacent');
+            }
+            if (index < tiles.length - 1) {
+                tiles[index + 1].classList.remove('adjacent');
+            }
+        }
+
+        function swapTiles(fromIndex, toIndex) {
+            const fromTile = document.querySelector(`#tiles .tile[data-index="${fromIndex}"]`);
+            const toTile = document.querySelector(`#tiles .tile[data-index="${toIndex}"]`);
+
+            fromTile.classList.add('fade-out');
+            toTile.classList.add('fade-out');
+
+
+            [currentTiles[fromIndex], currentTiles[toIndex]] = [currentTiles[toIndex], currentTiles[fromIndex]];
+            renderTiles();
+
+            const newFromTile = document.querySelector(`#tiles .tile[data-index="${fromIndex}"]`);
+            const newToTile = document.querySelector(`#tiles .tile[data-index="${toIndex}"]`);
+
+            newFromTile.classList.add('fade-in');
+            newToTile.classList.add('fade-in');
+
+            setTimeout(() => {
+                newFromTile.classList.remove('fade-in');
+                newToTile.classList.remove('fade-in');
+            }, 300);
+
+
+            moveCount++;
+            drawArc(); // Update the arc after each move
+
+            // swap the first tile with last tile
+            if (moveCount % 2 === 0) {
+                const lastIndex = currentTiles.length - 1;
+                setTimeout(() => {
+                    [currentTiles[0], currentTiles[lastIndex]] = [currentTiles[lastIndex], currentTiles[0]];
+                    renderTiles();
+                    checkWin();
+                }, 250);
+            } else checkWin();
+        }
+
+        function showModal() {
+            const modal = document.getElementById('win-modal');
+            modal.style.display = 'block';
+
+            document.getElementById('ok-button').onclick = function() {
+                modal.style.display = 'none';
+                newGame();
+            };
+
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        function checkWin() {
+            console.log('currentTiles:', JSON.stringify(currentTiles));
+            console.log('secretTiles:', JSON.stringify(secretTiles));
+            console.log(JSON.stringify(currentTiles) === JSON.stringify(secretTiles))
+            if (JSON.stringify(currentTiles) === JSON.stringify(secretTiles)) {
+                document.querySelectorAll('#tiles .tile').forEach(tile => {
+                    tile.onclick = null;
+                });
+                showModal();
+            }
+        }
+
+        function newGame() {
+            generateTiles();
+            renderTiles();
+            moveCount = 0;
+            selectedTile = null;
+            document.getElementById('message').textContent = '';
+            drawArc(); // Draw the initial arc
+        }
+
+        document.getElementById('new-game').onclick = newGame;
+        window.addEventListener('resize', drawArc); // Redraw arc on window resize
+
+        window.onload = function() {
+            newGame();
+        };
+
+    </script>
+</body>
+</html>
