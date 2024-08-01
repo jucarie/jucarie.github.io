@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logic Gate Game</title>
+    <style>body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f0f0;
+    }
+    
+    #game-container {
+        width: 800px;
+        height: 600px;
+        background-color: white;
+        border: 1px solid #ccc;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    #toolbar {
+        padding: 10px;
+        background-color: #eee;
+        border-bottom: 1px solid #ccc;
+    }
+    
+    button {
+        margin-right: 10px;
+        padding: 5px 10px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    #game-board {
+        position: relative;
+        width: 100%;
+        height: calc(100% - 50px);
+    }
+    
+    .gate {
+        position: absolute;
+        width: 80px;
+        height: 60px;
+        background-color: #ddd;
+        border: 2px solid #999;
+        border-radius: 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        cursor: move;
+    }
+    
+    .input, .output {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #333;
+        border-radius: 50%;
+    }
+    
+    .input {
+        top: 25px;
+        left: -5px;
+    }
+    
+    .output {
+        top: 25px;
+        right: -5px;
+    }
+    
+    .connection {
+        position: absolute;
+        height: 2px;
+        background-color: #333;
+        transform-origin: 0 50%;
+    }</style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="toolbar">
+            <button id="add-and">Add AND Gate</button>
+            <button id="add-or">Add OR Gate</button>
+            <button id="add-not">Add NOT Gate</button>
+            <button id="clear">Clear Board</button>
+        </div>
+        <div id="game-board"></div>
+    </div>
+    <script>
+        const gameBoard = document.getElementById('game-board');
+const addAndBtn = document.getElementById('add-and');
+const addOrBtn = document.getElementById('add-or');
+const addNotBtn = document.getElementById('add-not');
+const clearBtn = document.getElementById('clear');
+
+let gates = [];
+let connections = [];
+let draggingGate = null;
+let connectingGate = null;
+
+function createGate(type, x, y) {
+    const gate = document.createElement('div');
+    gate.className = 'gate';
+    gate.textContent = type;
+    gate.style.left = `${x}px`;
+    gate.style.top = `${y}px`;
+
+    const input1 = document.createElement('div');
+    input1.className = 'input';
+    gate.appendChild(input1);
+
+    const output = document.createElement('div');
+    output.className = 'output';
+    gate.appendChild(output);
+
+    if (type !== 'NOT') {
+        const input2 = document.createElement('div');
+        input2.className = 'input';
+        input2.style.top = '35px';
+        gate.appendChild(input2);
+    }
+
+    gate.addEventListener('mousedown', startDragging);
+    output.addEventListener('mousedown', startConnecting);
+
+    gameBoard.appendChild(gate);
+    gates.push(gate);
+}
+
+function startDragging(e) {
+    draggingGate = e.target;
+    const rect = draggingGate.getBoundingClientRect();
+    draggingGate.offsetX = e.clientX - rect.left;
+    draggingGate.offsetY = e.clientY - rect.top;
+}
+
+function startConnecting(e) {
+    e.stopPropagation();
+    connectingGate = e.target.parentElement;
+}
+
+function updateConnections() {
+    connections.forEach(conn => conn.remove());
+    connections = [];
+
+    gates.forEach(gate => {
+        const outputs = gate.querySelectorAll('.output');
+        outputs.forEach(output => {
+            const connectedInputs = document.elementsFromPoint(output.getBoundingClientRect().right, output.getBoundingClientRect().top)
+                .filter(el => el.classList.contains('input'));
+
+            connectedInputs.forEach(input => {
+                const connection = document.createElement('div');
+                connection.className = 'connection';
+                const start = output.getBoundingClientRect();
+                const end = input.getBoundingClientRect();
+                const length = Math.sqrt(Math.pow(end.left - start.right, 2) + Math.pow(end.top - start.top, 2));
+                const angle = Math.atan2(end.top - start.top, end.left - start.right);
+
+                connection.style.width = `${length}px`;
+                connection.style.left = `${start.right}px`;
+                connection.style.top = `${start.top}px`;
+                connection.style.transform = `rotate(${angle}rad)`;
+
+                gameBoard.appendChild(connection);
+                connections.push(connection);
+            });
+        });
+    });
+}
+
+document.addEventListener('mousemove', (e) => {
+    if (draggingGate) {
+        const x = e.clientX - gameBoard.getBoundingClientRect().left - draggingGate.offsetX;
+        const y = e.clientY - gameBoard.getBoundingClientRect().top - draggingGate.offsetY;
+        draggingGate.style.left = `${x}px`;
+        draggingGate.style.top = `${y}px`;
+        updateConnections();
+    }
+});
+
+document.addEventListener('mouseup', () => {
+    draggingGate = null;
+    if (connectingGate) {
+        const inputs = document.elementsFromPoint(event.clientX, event.clientY)
+            .filter(el => el.classList.contains('input'));
+        if (inputs.length > 0) {
+            updateConnections();
+        }
+        connectingGate = null;
+    }
+});
+
+addAndBtn.addEventListener('click', () => createGate('AND', 50, 50));
+addOrBtn.addEventListener('click', () => createGate('OR', 50, 150));
+addNotBtn.addEventListener('click', () => createGate('NOT', 50, 250));
+clearBtn.addEventListener('click', () => {
+    gates.forEach(gate => gate.remove());
+    gates = [];
+    connections.forEach(conn => conn.remove());
+    connections = [];
+});
+    </script>
+</body>> 3.11.9
+https://securityonline.info/cve-2024-6695-cvss-9-8-in-popular-wordpress-plugin-exposes-50000-sites-to-admin-hijacking/
+https://wpscan.com/blog/unauthenticated-privilege-escalation-in-profile-builder-plugin/
+https://apepaduri.mmediu.ro/categorie/sumal/ | /wp-content/plugins/profile-builder
+https://psi-protectia-muncii.ro/ - nu ii guv
+https://pncr.fonduri-ue.ro/
+https://www.zoomeye.hk/searchResult?q=app%3A%22WordPress%20Profile%20Builder%20plugin%22%20%2Bcountry%3ARo
+
+https://www.bleepingcomputer.com/news/security/critical-exim-bug-bypasses-security-filters-on-15-million-mail-servers/
+</html>
