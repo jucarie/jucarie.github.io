@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planetarium v0.1</title>
+    <title>Planetarium v0.1b</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -26,7 +26,7 @@
             height: 80px;
             margin: 5px;
             cursor: pointer;
-            border: 2px solid #333;
+            /* border: 2px solid #333; */
             border-radius: 40%;
             transition: transform 0.2s, box-shadow 0.2s, opacity 0.3s;
         }
@@ -117,7 +117,7 @@
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.5);
         }
-
+/* 
         .modal-content {
             background-color: #222;
             margin: 15% auto;
@@ -128,13 +128,27 @@
             text-align: center;
             color: #fff;
             border-radius: 5px;
+        } */
+
+        .modal-content {
+            background-color: #080d23;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #555;
+            width: 200px;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 15px;
         }
 
-        .close-button {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
+        #ok-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
         }
 
         .close-button:hover,
@@ -143,6 +157,7 @@
             text-decoration: none;
             cursor: pointer;
         }
+
 
     </style>
 </head>
@@ -163,7 +178,6 @@
     </div>
     <div id="win-modal" class="modal">
         <div class="modal-content">
-            <span class="close-button" id="close-modal">&times;</span>
             <p>Ok! Ai terminat</p>
             <button id="ok-button">OK</button>
         </div>
@@ -240,6 +254,7 @@
             ctx.textBaseline = 'middle';
             ctx.fillText(`${moveCount % 2}/2`, midX, y + 25);
         }
+
 
         function renderTileSet(containerId, tiles, clickable) {
             const tilesContainer = document.getElementById(containerId);
@@ -331,6 +346,7 @@
             } else checkWin();
         }
 
+
         function showModal() {
             const modal = document.getElementById('win-modal');
             modal.style.display = 'block';
@@ -349,9 +365,6 @@
         }
 
         function checkWin() {
-            console.log('currentTiles:', JSON.stringify(currentTiles));
-            console.log('secretTiles:', JSON.stringify(secretTiles));
-            console.log(JSON.stringify(currentTiles) === JSON.stringify(secretTiles))
             if (JSON.stringify(currentTiles) === JSON.stringify(secretTiles)) {
                 document.querySelectorAll('#tiles .tile').forEach(tile => {
                     tile.onclick = null;
