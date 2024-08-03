@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
-    <title>Planetarium v0.3c</title>
+    <title>Planetarium v0.4 beta</title>
     <style>
     * {
         margin: 0;
@@ -204,7 +204,7 @@
     <body>
         <div id="game-container">
             <header>
-                <h1>Planetarium v0.3c</h1>
+                <h1>Planetarium v0.4 beta</h1>
                 <div id="move-counter">Moves: <span id="move-count">0</span></div>
             </header>
             <main>
@@ -404,6 +404,7 @@
         generateTiles();
         gameState.stepCounts = [3, 0, 2, 0, 2, 0, 3];
         gameState.moveCount = 0;
+        updateMoveCounter();
         gameState.selectedTile = null;
 
         renderSecretTiles(); // Render secret tiles once at the start of a new game
