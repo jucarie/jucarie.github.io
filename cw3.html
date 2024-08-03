@@ -218,7 +218,7 @@
         <div id="win-modal" class="modal">
             <div class="modal-content">
                 <h2>Buna treaba!</h2>
-                <p>Ai castigat!</p>
+                <p>Ai castigat cu: <span id="final-move-count"></span> mutari.</p>
                 <button id="ok-button">Joaca mai odata</button>
             </div>
         </div>
@@ -373,6 +373,7 @@
         if (JSON.stringify(gameState.currentTiles) === JSON.stringify(gameState.secretTiles)) {
             disableTileClicks();
             setTimeout(() => {
+                document.getElementById('final-move-count').textContent = gameState.moveCount;
                 document.getElementById('win-modal').style.display = 'block';
             }, animMiliSec / 2);
         }
