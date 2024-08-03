@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planetarium v0.2</title>
+    <title>Planetarium v0.2b</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -313,7 +313,7 @@
             }
             setTimeout(() => {
                 checkWin();
-            })
+            }, 500);
 
             // // If no swap was performed, proceed to check for other cases
             // if (!swapsPerformed) {
@@ -390,7 +390,11 @@
             newGame();
         };
 
-        window.onload = newGame;
+        // window.onload = newGame;
+        window.onload = function() {
+            screen.orientation.lock("portrait");
+            newGame();
+        };
     </script>
 </body>
 </html>
