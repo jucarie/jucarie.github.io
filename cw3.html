@@ -359,6 +359,7 @@
 
             // Perform swap if stepCounts[0] === 0 and stepCounts[stepCounts.length - 1] === 0
             if (stepCounts[0] === 0 && stepCounts[stepCounts.length - 1] === 0) {
+                console.log(11111)
                 animateAutoSwap(0, stepCounts.length - 1, () => {
                     [currentTiles[0], currentTiles[stepCounts.length - 1]] = [currentTiles[stepCounts.length - 1], currentTiles[0]];
                     stepCounts[0] = 3;
@@ -371,6 +372,7 @@
 
             // Perform swap if stepCounts[2] === 0 and stepCounts[stepCounts.length - 3] === 0
             if (stepCounts[2] === 0 && stepCounts[stepCounts.length - 3] === 0) {
+                console.log(22222)
                 animateAutoSwap(2, stepCounts.length - 3, () => {
                     [currentTiles[2], currentTiles[stepCounts.length - 3]] = [currentTiles[stepCounts.length - 3], currentTiles[2]];
                     stepCounts[2] = 2;
@@ -380,13 +382,13 @@
                     
                 });
             }
-
+            console.log(33333)
             checkWin();
 
             // // If no swap was performed, proceed to check for other cases
-            // if (!swapsPerformed) {
-            //     // Additional logic if needed
-            // }
+            if (!swapsPerformed) {
+                checkWin();
+            }
         }
 
 
