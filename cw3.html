@@ -2,165 +2,222 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planetarium v0.3</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Planetarium v0.3b</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #121212;
-            color: #fff;
-        }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #121212;
+        color: #fff;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #game-container {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px;
+    }
+
+    header {
+        text-align: center;
+        padding: 10px 0;
+    }
+
+    h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    #move-counter {
+        font-size: 18px;
+    }
+
+    main {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #secret-tiles, #tiles {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 10px 0;
+    }
+
+    .tile {
+        width: 60px;
+        height: 60px;
+        margin: 0 10px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .tile-inner {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .tile-highlight {
+        border: 2px solid white;
+        padding: 5px;
+    }
+
+    .tile-count {
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+    }
+
+    .tile.selected .tile-inner {
+        transform: scale(1.1);
+        box-shadow: 0 0 18px white;
+    }
+
+    .tile.adjacent .tile-inner {
+        box-shadow: 0 0 13px white;
+        opacity: 0.7;
+    }
+
+    #secret-tiles .tile {
+        width: 30px;
+        height: 30px;
+        margin: 0 5px;
+    }
+
+    footer {
+        text-align: center;
+        padding: 10px 0;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #333;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #555;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        background-color: #080d23;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #555;
+        width: 80%;
+        max-width: 300px;
+        text-align: center;
+        border-radius: 15px;
+    }
+
+    #ok-button {
+        margin-top: 15px;
+    }
+
+    @keyframes swapLeft {
+        0% { transform: translateX(0); }
+        50% { transform: translateX(-70px); }
+        100% { transform: translateX(0); }
+    }
+
+    @keyframes swapRight {
+        0% { transform: translateX(0); }
+        50% { transform: translateX(70px); }
+        100% { transform: translateX(0); }
+    }
+
+    @keyframes fadeInOut {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
+    .swap-left {
+        animation: swapLeft 0.5s ease-in-out, fadeInOut 0.5s ease-in-out;
+    }
+
+    .swap-right {
+        animation: swapRight 0.5s ease-in-out, fadeInOut 0.5s ease-in-out;
+    }
+
+    @media (orientation: portrait) {
         #game-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        #tiles {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-top: 20px;
-        }
-
-        .tile {
-            width: 60px;
-            height: 60px;
-            margin: 0 10px;
-            cursor: pointer;
-            position: relative;
-        }
-
-        .tile-inner {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .tile-highlight {
-            border: 2px solid white;
-            padding: 5px;
-        }
-
-        .tile-count {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 14px;
-        }
-
-        .tile.selected .tile-inner {
-            transform: scale(1.1);
-            box-shadow: 0 0 18px white;
-        }
-
-        .tile.adjacent .tile-inner {
-            box-shadow: 0 0 13px white;
-            opacity: 0.7;
-        }
-
-        #secret-tiles {
-            display: flex;
-            margin-bottom: 20px;
-        }
-
-        #secret-tiles .tile {
-            width: 30px;
-            height: 30px;
-            margin: 0 5px;
-        }
-
-        button {
-            margin-top: 30px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #333;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-        }
-
-        .modal {
             display: none;
-            position: fixed;
-            z-index: 10;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.5);
         }
-
-        .modal-content {
-            background-color: #080d23;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #555;
-            width: 200px;
-            text-align: center;
-            border-radius: 15px;
+        #orientation-warning {
+            display: block;
         }
+    }
 
-        #ok-button {
-            margin-top: 15px;
+    @media (orientation: landscape) {
+        #orientation-warning {
+            display: none;
         }
-
-
-        @keyframes swapLeft {
-            0% { transform: translateX(0); }
-            50% { transform: translateX(-70px); }
-            100% { transform: translateX(0); }
-        }
-
-        @keyframes swapRight {
-            0% { transform: translateX(0); }
-            50% { transform: translateX(70px); }
-            100% { transform: translateX(0); }
-        }
-
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-
-        .tile-inner {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            transition: transform 0.2s, box-shadow 0.2s;
-            position: relative;
-        }
-
-        .swap-left {
-            animation: swapLeft 0.5s ease-in-out, fadeInOut 0.5s ease-in-out;
-        }
-
-        .swap-right {
-            animation: swapRight 0.5s ease-in-out, fadeInOut 0.5s ease-in-out;
-        }
-            </style>
-</head>
-<body>
-    <div id="game-container">
-        <div id="secret-tiles"></div>
-        <div id="tiles"></div>
-        <button id="new-game">New Game</button>
-    </div>
-    <div id="win-modal" class="modal">
-        <div class="modal-content">
-            <p>Ok! Ai terminat</p>
-            <button id="ok-button">OK</button>
+    }
+    </style>
+    </head>
+    <body>
+        <div id="game-container">
+            <header>
+                <h1>Planetarium v0.2b</h1>
+                <div id="move-counter">Moves: <span id="move-count">0</span></div>
+            </header>
+            <main>
+                <div id="secret-tiles"></div>
+                <div id="tiles"></div>
+            </main>
+            <footer>
+                <button id="new-game">New Game</button>
+            </footer>
         </div>
-    </div>
-    <script>
+        <div id="win-modal" class="modal">
+            <div class="modal-content">
+                <h2>Congratulations!</h2>
+                <p>You've completed the game!</p>
+                <button id="ok-button">Play Again</button>
+            </div>
+        </div>
+        <div id="orientation-warning" class="modal">
+            <div class="modal-content">
+                <p>Please rotate your device to landscape mode for the best experience.</p>
+            </div>
+        </div>
+        <script>
     const colors = ['#ff073a', 'blue', '#39ff14', 'yellow', '#9400ff', 'orange', 'pink'];
     const blockCount = 7;
     const animMiliSec = 500;
@@ -246,6 +303,7 @@
         animateSwap(fromIndex, toIndex, () => {
             [gameState.currentTiles[fromIndex], gameState.currentTiles[toIndex]] = [gameState.currentTiles[toIndex], gameState.currentTiles[fromIndex]];
             gameState.moveCount++;
+            updateMoveCounter();
             updateStepCounts();
             renderCurrentTiles();
             checkAndPerformAutoSwaps();
@@ -316,6 +374,20 @@
         document.getElementById('tiles').onclick = handleTileClick;
     }
 
+    function updateMoveCounter() {
+        document.getElementById('move-count').textContent = gameState.moveCount;
+    }
+
+    function handleOrientationChange() {
+        if (window.orientation === 0 || window.orientation === 180) {
+            document.getElementById('orientation-warning').style.display = 'block';
+            document.getElementById('game-container').style.display = 'none';
+        } else {
+            document.getElementById('orientation-warning').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+        }
+    }
+
     function newGame() {
         generateTiles();
         gameState.stepCounts = [3, 0, 2, 0, 2, 0, 3];
@@ -337,6 +409,8 @@
     };
     document.getElementById('tiles').onclick = handleTileClick;
 
+    window.addEventListener('load', handleOrientationChange);
+    window.addEventListener('orientationchange', handleOrientationChange);
     window.onload = newGame;
     </script>
 </body>
