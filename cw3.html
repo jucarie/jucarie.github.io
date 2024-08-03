@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planetarium v0.2b</title>
+    <title>Planetarium v0.3</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -161,240 +161,183 @@
         </div>
     </div>
     <script>
-        const colors = ['#ff073a', 'blue', '#39ff14', 'yellow', '#9400ff', 'orange', 'pink'];
-        let currentTiles = [];
-        let secretTiles = [];
-        let moveCount = 0;
-        let blockCount = 7;
-        let selectedTile = null;
-        let stepCounts = [3, 0, 2, 0, 2, 0, 3];
+    const colors = ['#ff073a', 'blue', '#39ff14', 'yellow', '#9400ff', 'orange', 'pink'];
+    const blockCount = 7;
+    const animMiliSec = 500;
 
-        function generateTiles() {
-            secretTiles = [];
-            const availableColors = [...colors];
-            
-            for (let i = 0; i < blockCount; i++) {
-                const randomIndex = Math.floor(Math.random() * availableColors.length);
-                secretTiles.push(availableColors[randomIndex]);
-                availableColors.splice(randomIndex, 1);
+    const gameState = {
+        currentTiles: [],
+        secretTiles: [],
+        moveCount: 0,
+        selectedTile: null,
+        stepCounts: [3, 0, 2, 0, 2, 0, 3]
+    };
+
+    function generateTiles() {
+        const availableColors = [...colors];
+        gameState.secretTiles = Array(blockCount).fill().map(() => {
+            const randomIndex = Math.floor(Math.random() * availableColors.length);
+            return availableColors.splice(randomIndex, 1)[0];
+        });
+        gameState.currentTiles = [...gameState.secretTiles];
+        shuffleArray(gameState.currentTiles);
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function renderCurrentTiles() {
+        const tilesContainer = document.getElementById('tiles');
+        tilesContainer.innerHTML = gameState.currentTiles.map((color, index) => `
+            <div class="tile ${(index === 0 || index === 2 || index === gameState.currentTiles.length - 3 || index === gameState.currentTiles.length - 1) ? 'tile-highlight' : ''}" data-index="${index}">
+                <div class="tile-inner" style="background-color: ${color}"></div>
+                ${gameState.stepCounts[index] > 0 ? `<div class="tile-count">${gameState.stepCounts[index]}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function renderSecretTiles() {
+        const secretTilesContainer = document.getElementById('secret-tiles');
+        secretTilesContainer.innerHTML = gameState.secretTiles.map(color => `
+            <div class="tile">
+                <div class="tile-inner" style="background-color: ${color}"></div>
+            </div>
+        `).join('');
+    }
+
+    function handleTileClick(e) {
+        const tile = e.target.closest('.tile');
+        if (!tile) return;
+
+        const index = parseInt(tile.getAttribute('data-index'));
+        if (gameState.selectedTile === null) {
+            gameState.selectedTile = tile;
+            tile.classList.add('selected');
+            highlightAdjacentTiles(index);
+        } else {
+            const fromIndex = parseInt(gameState.selectedTile.getAttribute('data-index'));
+            if (fromIndex !== index && Math.abs(fromIndex - index) === 1) {
+                swapTiles(fromIndex, index);
             }
-            
-            currentTiles = [...secretTiles];
-            shuffleArray(currentTiles);
+            clearHighlightAdjacentTiles(fromIndex);
+            gameState.selectedTile.classList.remove('selected');
+            gameState.selectedTile = null;
         }
+    }
 
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-        }
+    function highlightAdjacentTiles(index) {
+        const tiles = document.querySelectorAll('#tiles .tile');
+        if (index > 0) tiles[index - 1].classList.add('adjacent');
+        if (index < tiles.length - 1) tiles[index + 1].classList.add('adjacent');
+    }
 
-        function renderTiles() {
-            renderTileSet('tiles', currentTiles, true);
-            renderTileSet('secret-tiles', secretTiles, false);
-        }
+    function clearHighlightAdjacentTiles(index) {
+        const tiles = document.querySelectorAll('#tiles .tile');
+        if (index > 0) tiles[index - 1].classList.remove('adjacent');
+        if (index < tiles.length - 1) tiles[index + 1].classList.remove('adjacent');
+    }
 
+    function swapTiles(fromIndex, toIndex) {
+        disableTileClicks();
+        animateSwap(fromIndex, toIndex, () => {
+            [gameState.currentTiles[fromIndex], gameState.currentTiles[toIndex]] = [gameState.currentTiles[toIndex], gameState.currentTiles[fromIndex]];
+            gameState.moveCount++;
+            updateStepCounts();
+            renderCurrentTiles();
+            checkAndPerformAutoSwaps();
+        });
+    }
 
-        function renderTileSet(containerId, tiles, clickable) {
-            const tilesContainer = document.getElementById(containerId);
-            tilesContainer.innerHTML = '';
-            tiles.forEach((color, index) => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.setAttribute('data-index', index);
-                
-                const tileInner = document.createElement('div');
-                tileInner.className = 'tile-inner';
-                tileInner.style.backgroundColor = color;
+    function animateSwap(index1, index2, callback) {
+        const tile1 = document.querySelector(`#tiles .tile[data-index="${index1}"] .tile-inner`);
+        const tile2 = document.querySelector(`#tiles .tile[data-index="${index2}"] .tile-inner`);
 
-                tile.appendChild(tileInner);
+        tile1.classList.add(index1 < index2 ? 'swap-right' : 'swap-left');
+        tile2.classList.add(index1 < index2 ? 'swap-left' : 'swap-right');
 
-                if (clickable) {
-                    if (index === 0 || index === 2 || index === tiles.length - 3 || index === tiles.length - 1) {
-                        tile.classList.add('tile-highlight');
-                    }
+        setTimeout(() => {
+            tile1.classList.remove('swap-right', 'swap-left');
+            tile2.classList.remove('swap-right', 'swap-left');
+            callback();
+            enableTileClicks();
+        }, animMiliSec);
+    }
 
-                    tile.onclick = () => selectTile(tile);
-                    if (stepCounts[index] > 0) {
-                        const tileCount = document.createElement('div');
-                        tileCount.className = 'tile-count';
-                        tileCount.textContent = `${stepCounts[index]}`;
-                        tile.appendChild(tileCount);
-                    }
-                    tileInner.classList.remove('swap-left', 'swap-right');
-                }
+    function updateStepCounts() {
+        gameState.stepCounts = gameState.stepCounts.map(count => count > 0 ? count - 1 : count);
+    }
 
-                tilesContainer.appendChild(tile);
-            });
-        }
+    function checkAndPerformAutoSwaps() {
+        const autoSwaps = [
+            { condition: gameState.stepCounts[0] === 0 && gameState.stepCounts[gameState.stepCounts.length - 1] === 0, indices: [0, gameState.stepCounts.length - 1], newCounts: [3, 3] },
+            { condition: gameState.stepCounts[2] === 0 && gameState.stepCounts[gameState.stepCounts.length - 3] === 0, indices: [2, gameState.stepCounts.length - 3], newCounts: [2, 2] }
+        ];
 
+        let swapsPerformed = false;
 
-        function selectTile(tile) {
-            const index = parseInt(tile.getAttribute('data-index'));
-            if (selectedTile === null) {
-                selectedTile = tile;
-                tile.classList.add('selected');
-                highlightAdjacentTiles(index);
-            } else {
-                const fromIndex = parseInt(selectedTile.getAttribute('data-index'));
-                const toIndex = index;
-                if (fromIndex !== toIndex && (toIndex === fromIndex - 1 || toIndex === fromIndex + 1)) {
-                    swapTiles(fromIndex, toIndex);
-                }
-                clearHighlightAdjacentTiles(fromIndex);
-                selectedTile.classList.remove('selected');
-                selectedTile = null;
-            }
-        }
-
-        function highlightAdjacentTiles(index) {
-            const tiles = document.querySelectorAll('#tiles .tile');
-            if (index > 0) tiles[index - 1].classList.add('adjacent');
-            if (index < tiles.length - 1) tiles[index + 1].classList.add('adjacent');
-        }
-
-        function clearHighlightAdjacentTiles(index) {
-            const tiles = document.querySelectorAll('#tiles .tile');
-            if (index > 0) tiles[index - 1].classList.remove('adjacent');
-            if (index < tiles.length - 1) tiles[index + 1].classList.remove('adjacent');
-        }
-
-        function swapTiles(fromIndex, toIndex) {
-            const fromTile = document.querySelector(`#tiles .tile[data-index="${fromIndex}"] .tile-inner`);
-            const toTile = document.querySelector(`#tiles .tile[data-index="${toIndex}"] .tile-inner`);
-
-            fromTile.classList.add(fromIndex < toIndex ? 'swap-right' : 'swap-left');
-            toTile.classList.add(fromIndex < toIndex ? 'swap-left' : 'swap-right');
-
-            setTimeout(() => {
-                [currentTiles[fromIndex], currentTiles[toIndex]] = [currentTiles[toIndex], currentTiles[fromIndex]];
-                moveCount++;
-                updateStepCounts();
-                renderTiles();
-                checkAndPerformAutoSwaps();
-                checkWin();
-            }, 500);
-        }
-
-        function updateStepCounts() {
-            for (let i = 0; i < stepCounts.length; i++) {
-                if (stepCounts[i] > 0) {
-                    stepCounts[i]--;
-                }
-            }
-        }
-
-        function checkAndPerformAutoSwaps() {
-            let swapsPerformed = false;
-
-            // Perform swap if stepCounts[0] === 0 and stepCounts[stepCounts.length - 1] === 0
-            if (stepCounts[0] === 0 && stepCounts[stepCounts.length - 1] === 0) {
-                animateAutoSwap(0, stepCounts.length - 1, () => {
-                    [currentTiles[0], currentTiles[stepCounts.length - 1]] = [currentTiles[stepCounts.length - 1], currentTiles[0]];
-                    stepCounts[0] = 3;
-                    stepCounts[stepCounts.length - 1] = 3;
-                    swapsPerformed = true;
-                    renderTiles();
-                    
+        autoSwaps.forEach(swap => {
+            if (swap.condition) {
+                swapsPerformed = true;
+                disableTileClicks();
+                animateSwap(swap.indices[0], swap.indices[1], () => {
+                    [gameState.currentTiles[swap.indices[0]], gameState.currentTiles[swap.indices[1]]] = [gameState.currentTiles[swap.indices[1]], gameState.currentTiles[swap.indices[0]]];
+                    swap.indices.forEach((index, i) => gameState.stepCounts[index] = swap.newCounts[i]);
                 });
             }
+        });
 
-            // Perform swap if stepCounts[2] === 0 and stepCounts[stepCounts.length - 3] === 0
-            if (stepCounts[2] === 0 && stepCounts[stepCounts.length - 3] === 0) {
-                animateAutoSwap(2, stepCounts.length - 3, () => {
-                    [currentTiles[2], currentTiles[stepCounts.length - 3]] = [currentTiles[stepCounts.length - 3], currentTiles[2]];
-                    stepCounts[2] = 2;
-                    stepCounts[stepCounts.length - 3] = 2;
-                    swapsPerformed = true;
-                    renderTiles();
-                    
-                });
-            }
+        if (swapsPerformed) {
             setTimeout(() => {
+                renderCurrentTiles();
                 checkWin();
-            }, 500);
-
-            // // If no swap was performed, proceed to check for other cases
-            // if (!swapsPerformed) {
-            //     pass
-            // }
+                enableTileClicks();
+            }, animMiliSec);
+        } else {
+            checkWin();
         }
+    }
 
-
-        function animateAutoSwap(index1, index2, callback) {
-            const tile1 = document.querySelector(`#tiles .tile[data-index="${index1}"] .tile-inner`);
-            const tile2 = document.querySelector(`#tiles .tile[data-index="${index2}"] .tile-inner`);
-
-            tile1.classList.add('swap-right');
-            tile2.classList.add('swap-left');
-
-            setTimeout(() => {
-                tile1.classList.remove('swap-right');
-                tile2.classList.remove('swap-left');
-                callback();
-            }, 500);
-        }
-
-        function animateAutoSwapRAU(index1, index2, callback) {
-            const tile1 = document.querySelector(`#tiles .tile[data-index="${index1}"] .tile-inner`);
-            const tile2 = document.querySelector(`#tiles .tile[data-index="${index2}"] .tile-inner`);
-
-            // Set the move counts to 0/2 or 0/3 before the animation
-            stepCounts[index1] = 0;
-            stepCounts[index2] = 0;
-            renderTiles();
-
-            tile1.classList.add('swap-right');
-            tile2.classList.add('swap-left');
-
-            setTimeout(() => {
-                tile1.classList.remove('swap-right');
-                tile2.classList.remove('swap-left');
-                
-                callback();
-
-                // Set the move counts to 2/2 or 3/3 after the animation
-                stepCounts[index1] = (index1 === 0 || index1 === stepCounts.length - 1) ? 3 : 2;
-                stepCounts[index2] = (index2 === 0 || index2 === stepCounts.length - 1) ? 3 : 2;
-                
-                renderTiles();
-            }, 500);
-        }
-
-
-        function showModal() {
+    function checkWin() {
+        if (JSON.stringify(gameState.currentTiles) === JSON.stringify(gameState.secretTiles)) {
+            disableTileClicks();
             document.getElementById('win-modal').style.display = 'block';
         }
+    }
 
-        function checkWin() {
-            console.log(JSON.stringify(currentTiles))
-            console.log(JSON.stringify(secretTiles))
-            if (JSON.stringify(currentTiles) === JSON.stringify(secretTiles)) {
-                document.querySelectorAll('#tiles .tile').forEach(tile => tile.onclick = null);
-                showModal();
-            }
-        }
+    function disableTileClicks() {
+        document.getElementById('tiles').onclick = null;
+    }
 
-        function newGame() {
-            generateTiles();
-            stepCounts = [3, 0, 2, 0, 2, 0, 3];
-            renderTiles();
-            moveCount = 0;
-            selectedTile = null;
-        }
+    function enableTileClicks() {
+        document.getElementById('tiles').onclick = handleTileClick;
+    }
 
-        document.getElementById('new-game').onclick = newGame;
-        document.getElementById('ok-button').onclick = () => {
-            document.getElementById('win-modal').style.display = 'none';
-            newGame();
-        };
+    function newGame() {
+        generateTiles();
+        gameState.stepCounts = [3, 0, 2, 0, 2, 0, 3];
+        gameState.moveCount = 0;
+        gameState.selectedTile = null;
 
-        // window.onload = newGame;
-        window.onload = function() {
-            screen.orientation.lock("portrait");
-            newGame();
-        };
+        renderSecretTiles(); // Render secret tiles once at the start of a new game
+
+        console.clear();
+        renderCurrentTiles();
+
+        enableTileClicks();
+    }
+
+    document.getElementById('new-game').onclick = newGame;
+    document.getElementById('ok-button').onclick = () => {
+        document.getElementById('win-modal').style.display = 'none';
+        newGame();
+    };
+    document.getElementById('tiles').onclick = handleTileClick;
+
+    window.onload = newGame;
     </script>
 </body>
 </html>
