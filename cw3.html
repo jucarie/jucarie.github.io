@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planetarium v0.2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #121212;
+            color: #fff;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #tiles {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .tile {
+            width: 60px;
+            height: 60px;
+            margin: 0 10px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tile-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .tile-highlight {
+            border: 2px solid white;
+            padding: 5px;
+        }
+
+        .tile-count {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 14px;
+        }
+
+        .tile.selected .tile-inner {
+            transform: scale(1.1);
+            box-shadow: 0 0 18px white;
+        }
+
+        .tile.adjacent .tile-inner {
+            box-shadow: 0 0 13px white;
+            opacity: 0.7;
+        }
+
+        #secret-tiles {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        #secret-tiles .tile {
+            width: 30px;
+            height: 30px;
+            margin: 0 5px;
+        }
+
+        button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: #080d23;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #555;
+            width: 200px;
+            text-align: center;
+            border-radius: 15px;
+        }
+
+        #ok-button {
+            margin-top: 15px;
+        }
+
+
+        @keyframes swapLeft {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(-70px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes swapRight {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(70px); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .tile-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .swap-left {
+            animation: swapLeft 0.5s ease-in-out, fadeInOut 0.5s ease-in-out;
+        }
+
+        .swap-right {
+            animation: swapRight 0.5s ease-in-out, fadeInOut 0.5s ease-in-out;
+        }
+            </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="secret-tiles"></div>
+        <div id="tiles"></div>
+        <button id="new-game">New Game</button>
+    </div>
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <p>Ok! Ai terminat</p>
+            <button id="ok-button">OK</button>
+        </div>
+    </div>
+    <script>
+        const colors = ['#ff073a', 'blue', '#39ff14', 'yellow', '#9400ff', 'orange', 'pink'];
+        let currentTiles = [];
+        let secretTiles = [];
+        let moveCount = 0;
+        let blockCount = 7;
+        let selectedTile = null;
+        let stepCounts = [3, 0, 2, 0, 2, 0, 3];
+
+        function generateTiles() {
+            secretTiles = [];
+            const availableColors = [...colors];
+            
+            for (let i = 0; i < blockCount; i++) {
+                const randomIndex = Math.floor(Math.random() * availableColors.length);
+                secretTiles.push(availableColors[randomIndex]);
+                availableColors.splice(randomIndex, 1);
+            }
+            
+            currentTiles = [...secretTiles];
+            shuffleArray(currentTiles);
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function renderTiles() {
+            renderTileSet('tiles', currentTiles, true);
+            renderTileSet('secret-tiles', secretTiles, false);
+        }
+
+        function renderTileSetBAK(containerId, tiles, clickable) {
+            const tilesContainer = document.getElementById(containerId);
+            tilesContainer.innerHTML = '';
+            tiles.forEach((color, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.setAttribute('data-index', index);
+                
+                const tileInner = document.createElement('div');
+                tileInner.className = 'tile-inner';
+                tileInner.style.backgroundColor = color;
+
+                tile.appendChild(tileInner);
+
+                if (clickable) {
+                    if (index === 0 || index === 2 || index === tiles.length - 3 || index === tiles.length - 1) {
+                    tile.classList.add('tile-highlight');
+                    }
+
+                    tile.onclick = () => selectTile(tile);
+                    if (stepCounts[index] > 0) {
+                        const tileCount = document.createElement('div');
+                        tileCount.className = 'tile-count';
+
+                        const totalSteps = (index === 0 || index === tiles.length - 1) ? 3 : 2;
+                        tileCount.textContent = `${stepCounts[index]}/${totalSteps}`;
+                        tile.appendChild(tileCount);
+                    }
+                    tileInner.classList.remove('swap-left', 'swap-right');
+                }
+
+                tilesContainer.appendChild(tile);
+            });
+        }
+
+        function renderTileSet(containerId, tiles, clickable) {
+            const tilesContainer = document.getElementById(containerId);
+            tilesContainer.innerHTML = '';
+            tiles.forEach((color, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.setAttribute('data-index', index);
+                
+                const tileInner = document.createElement('div');
+                tileInner.className = 'tile-inner';
+                tileInner.style.backgroundColor = color;
+
+                tile.appendChild(tileInner);
+
+                if (clickable) {
+                    if (index === 0 || index === 2 || index === tiles.length - 3 || index === tiles.length - 1) {
+                        tile.classList.add('tile-highlight');
+                    }
+
+                    tile.onclick = () => selectTile(tile);
+                    if (stepCounts[index] > 0) {
+                        const tileCount = document.createElement('div');
+                        tileCount.className = 'tile-count';
+                        tileCount.textContent = `${stepCounts[index]}`;
+                        tile.appendChild(tileCount);
+                    }
+                    tileInner.classList.remove('swap-left', 'swap-right');
+                }
+
+                tilesContainer.appendChild(tile);
+            });
+        }
+
+
+        function renderTileSetRAU(containerId, tiles, clickable) {
+            const tilesContainer = document.getElementById(containerId);
+            tilesContainer.innerHTML = '';
+            tiles.forEach((color, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.setAttribute('data-index', index);
+                
+                const tileInner = document.createElement('div');
+                tileInner.className = 'tile-inner';
+                tileInner.style.backgroundColor = color;
+
+                tile.appendChild(tileInner);
+
+                if (clickable) {
+                    if (index === 0 || index === 2 || index === tiles.length - 3 || index === tiles.length - 1) {
+                    tile.classList.add('tile-highlight');
+                    }
+
+                    tile.onclick = () => selectTile(tile);
+                    if (index === 0 || index === 2 || index === tiles.length - 3 || index === tiles.length - 1) {
+                        const tileCount = document.createElement('div');
+                        tileCount.className = 'tile-count';
+
+                        const totalSteps = (index === 0 || index === tiles.length - 1) ? 3 : 2;
+                        tileCount.textContent = `${Math.max(stepCounts[index], 0)}/${totalSteps}`;
+                        tile.appendChild(tileCount);
+                    }
+                    tileInner.classList.remove('swap-left', 'swap-right');
+                }
+
+                tilesContainer.appendChild(tile);
+            });
+        }
+
+        function selectTile(tile) {
+            const index = parseInt(tile.getAttribute('data-index'));
+            if (selectedTile === null) {
+                selectedTile = tile;
+                tile.classList.add('selected');
+                highlightAdjacentTiles(index);
+            } else {
+                const fromIndex = parseInt(selectedTile.getAttribute('data-index'));
+                const toIndex = index;
+                if (fromIndex !== toIndex && (toIndex === fromIndex - 1 || toIndex === fromIndex + 1)) {
+                    swapTiles(fromIndex, toIndex);
+                }
+                clearHighlightAdjacentTiles(fromIndex);
+                selectedTile.classList.remove('selected');
+                selectedTile = null;
+            }
+        }
+
+        function highlightAdjacentTiles(index) {
+            const tiles = document.querySelectorAll('#tiles .tile');
+            if (index > 0) tiles[index - 1].classList.add('adjacent');
+            if (index < tiles.length - 1) tiles[index + 1].classList.add('adjacent');
+        }
+
+        function clearHighlightAdjacentTiles(index) {
+            const tiles = document.querySelectorAll('#tiles .tile');
+            if (index > 0) tiles[index - 1].classList.remove('adjacent');
+            if (index < tiles.length - 1) tiles[index + 1].classList.remove('adjacent');
+        }
+
+        function swapTiles(fromIndex, toIndex) {
+            const fromTile = document.querySelector(`#tiles .tile[data-index="${fromIndex}"] .tile-inner`);
+            const toTile = document.querySelector(`#tiles .tile[data-index="${toIndex}"] .tile-inner`);
+
+            fromTile.classList.add(fromIndex < toIndex ? 'swap-right' : 'swap-left');
+            toTile.classList.add(fromIndex < toIndex ? 'swap-left' : 'swap-right');
+
+            setTimeout(() => {
+                [currentTiles[fromIndex], currentTiles[toIndex]] = [currentTiles[toIndex], currentTiles[fromIndex]];
+                moveCount++;
+                updateStepCounts();
+                renderTiles();
+                checkAndPerformAutoSwaps();
+                checkWin();
+            }, 500);
+        }
+
+        function updateStepCounts() {
+            for (let i = 0; i < stepCounts.length; i++) {
+                if (stepCounts[i] > 0) {
+                    stepCounts[i]--;
+                }
+            }
+        }
+
+        function updateStepCountsRAU() {
+            for (let i = 0; i < stepCounts.length; i++) {
+                if (stepCounts[i] > 0) {
+                    stepCounts[i]--;
+                }
+                if (stepCounts[i] === 0) {
+                    if (i === 0 || i === stepCounts.length - 1) {
+                        stepCounts[i] = 3;
+                    } else if (i === 2 || i === stepCounts.length - 3) {
+                        stepCounts[i] = 2;
+                    }
+                }
+            }
+        }
+
+        function checkAndPerformAutoSwaps() {
+            let swapsPerformed = false;
+
+            if (stepCounts[0] === 0 && stepCounts[stepCounts.length - 1] === 0) {
+                animateAutoSwap(0, currentTiles.length - 1, () => {
+                    [currentTiles[0], currentTiles[currentTiles.length - 1]] = [currentTiles[currentTiles.length - 1], currentTiles[0]];
+                    stepCounts[0] = 3;
+                    stepCounts[stepCounts.length - 1] = 3;
+                    swapsPerformed = true;
+                    continueSwaps();
+                });
+            } else if (stepCounts[2] === 0 && stepCounts[stepCounts.length - 3] === 0) {
+                animateAutoSwap(2, currentTiles.length - 3, () => {
+                    [currentTiles[2], currentTiles[currentTiles.length - 3]] = [currentTiles[currentTiles.length - 3], currentTiles[2]];
+                    stepCounts[2] = 2;
+                    stepCounts[stepCounts.length - 3] = 2;
+                    swapsPerformed = true;
+                    continueSwaps();
+                });
+            } else {
+                continueSwaps();
+            }
+
+            function continueSwaps() {
+                if (swapsPerformed) {
+                    renderTiles();
+                    checkWin();
+                }
+            }
+        }
+
+        function animateAutoSwap(index1, index2, callback) {
+            const tile1 = document.querySelector(`#tiles .tile[data-index="${index1}"] .tile-inner`);
+            const tile2 = document.querySelector(`#tiles .tile[data-index="${index2}"] .tile-inner`);
+
+            tile1.classList.add('swap-right');
+            tile2.classList.add('swap-left');
+
+            setTimeout(() => {
+                tile1.classList.remove('swap-right');
+                tile2.classList.remove('swap-left');
+                callback();
+            }, 500);
+        }
+
+        function animateAutoSwapRAU(index1, index2, callback) {
+            const tile1 = document.querySelector(`#tiles .tile[data-index="${index1}"] .tile-inner`);
+            const tile2 = document.querySelector(`#tiles .tile[data-index="${index2}"] .tile-inner`);
+
+            // Set the move counts to 0/2 or 0/3 before the animation
+            stepCounts[index1] = 0;
+            stepCounts[index2] = 0;
+            renderTiles();
+
+            tile1.classList.add('swap-right');
+            tile2.classList.add('swap-left');
+
+            setTimeout(() => {
+                tile1.classList.remove('swap-right');
+                tile2.classList.remove('swap-left');
+                
+                callback();
+
+                // Set the move counts to 2/2 or 3/3 after the animation
+                stepCounts[index1] = (index1 === 0 || index1 === stepCounts.length - 1) ? 3 : 2;
+                stepCounts[index2] = (index2 === 0 || index2 === stepCounts.length - 1) ? 3 : 2;
+                
+                renderTiles();
+            }, 500);
+        }
+
+
+        function showModal() {
+            document.getElementById('win-modal').style.display = 'block';
+        }
+
+        function checkWin() {
+            if (JSON.stringify(currentTiles) === JSON.stringify(secretTiles)) {
+                document.querySelectorAll('#tiles .tile').forEach(tile => tile.onclick = null);
+                showModal();
+            }
+        }
+
+        function newGame() {
+            generateTiles();
+            stepCounts = [3, 0, 2, 0, 2, 0, 3];
+            renderTiles();
+            moveCount = 0;
+            selectedTile = null;
+        }
+
+        document.getElementById('new-game').onclick = newGame;
+        document.getElementById('ok-button').onclick = () => {
+            document.getElementById('win-modal').style.display = 'none';
+            newGame();
+        };
+
+        window.onload = newGame;
+    </script>
+</body>
+</html>
