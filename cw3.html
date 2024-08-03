@@ -217,9 +217,9 @@
         </div>
         <div id="win-modal" class="modal">
             <div class="modal-content">
-                <h2>Congratulations!</h2>
-                <p>You've completed the game!</p>
-                <button id="ok-button">Play Again</button>
+                <h2>Buna treaba!</h2>
+                <p>Ai castigat!</p>
+                <button id="ok-button">Joaca mai odata</button>
             </div>
         </div>
         <div id="orientation-warning" class="modal">
@@ -372,7 +372,9 @@
     function checkWin() {
         if (JSON.stringify(gameState.currentTiles) === JSON.stringify(gameState.secretTiles)) {
             disableTileClicks();
-            document.getElementById('win-modal').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('win-modal').style.display = 'block';
+            }, animMiliSec / 2);
         }
     }
 
