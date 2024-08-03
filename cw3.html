@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
-    <title>Planetarium v0.4 beta</title>
+    <title>Planetarium v0.4e beta</title>
     <style>
     * {
         margin: 0;
@@ -12,6 +12,7 @@
     }
 
     body {
+        touch-action: manipulation;
         font-family: Arial, sans-serif;
         background-color: #121212;
         color: #fff;
@@ -22,6 +23,7 @@
     }
 
     #game-container {
+        touch-action: manipulation;
         width: 100%;
         height: 100%;
         display: flex;
@@ -44,22 +46,15 @@
         font-size: 18px;
     }
 
-    main111111 {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
-
     main {
+        touch-action: manipulation;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding: 10px; /* Add padding if needed */
-        box-sizing: border-box; /* Ensure padding is included in the width/height calculations */
+        padding: 10px; 
+        box-sizing: border-box;
     }
 
     #secret-tiles, #tiles {
@@ -133,7 +128,7 @@
         background-color: #555;
     }
 
-    .modal {
+    /* .modal {
         display: none;
         position: fixed;
         z-index: 10;
@@ -158,6 +153,16 @@
 
     #ok-button {
         margin-top: 15px;
+    } */
+
+    #win-message {
+        display: none;
+        margin-top: 10px;
+        font-size: 18px;
+        color: #39ff14;
+        font-weight: bold;
+        text-shadow: 0 0 10px #39ff14;
+        animation: glow 1.5s ease-in-out infinite alternate;
     }
 
     @keyframes swapLeft {
@@ -175,6 +180,15 @@
     @keyframes fadeInOut {
         0%, 100% { opacity: 1; }
         50% { opacity: 0; }
+    }
+
+    @keyframes glow {
+        from {
+            text-shadow: 0 0 5px #39ff14, 0 0 10px #39ff14, 0 0 15px #39ff14;
+        }
+        to {
+            text-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14, 0 0 30px #39ff14;
+        }
     }
 
     .swap-left {
@@ -204,23 +218,17 @@
     <body>
         <div id="game-container">
             <header>
-                <h1>Planetarium v0.4 beta</h1>
-                <div id="move-counter">Moves: <span id="move-count">0</span></div>
+                <h1>Planetarium v0.4e beta</h1>
+                <div id="move-counter">Mutari: <span id="move-count">0</span></div>
+                <div id="win-message">Ai castigat!</div>
             </header>
             <main>
                 <div id="secret-tiles"></div>
                 <div id="tiles"></div>
             </main>
             <footer>
-                <button id="new-game">New Game</button>
+                <button id="new-game"></button>
             </footer>
-        </div>
-        <div id="win-modal" class="modal">
-            <div class="modal-content">
-                <h2>Buna treaba!</h2>
-                <p>Ai castigat cu: <span id="final-move-count"></span> mutari.</p>
-                <button id="ok-button">Joaca mai odata</button>
-            </div>
         </div>
         <div id="orientation-warning" class="modal">
             <div class="modal-content">
@@ -237,7 +245,8 @@
         secretTiles: [],
         moveCount: 0,
         selectedTile: null,
-        stepCounts: [3, 0, 2, 0, 2, 0, 3]
+        stepCounts: [3, 0, 2, 0, 2, 0, 3],
+        gameWon: false  // Add this line
     };
 
     function generateTiles() {
@@ -277,6 +286,8 @@
     }
 
     function handleTileClick(e) {
+        if (gameState.gameWon) return; 
+
         const tile = e.target.closest('.tile');
         if (!tile) return;
 
@@ -371,11 +382,10 @@
 
     function checkWin() {
         if (JSON.stringify(gameState.currentTiles) === JSON.stringify(gameState.secretTiles)) {
+            gameState.gameWon = true;  // Set the game as won
             disableTileClicks();
-            setTimeout(() => {
-                document.getElementById('final-move-count').textContent = gameState.moveCount;
-                document.getElementById('win-modal').style.display = 'block';
-            }, animMiliSec / 2);
+            document.getElementById('win-message').style.display = 'block';
+            document.getElementById('new-game').textContent = 'Joaca din nou'; 
         }
     }
 
@@ -384,7 +394,9 @@
     }
 
     function enableTileClicks() {
-        document.getElementById('tiles').onclick = handleTileClick;
+        if (!gameState.gameWon) {  // Only enable clicks if the game isn't won
+            document.getElementById('tiles').onclick = handleTileClick;
+        }
     }
 
     function updateMoveCounter() {
@@ -402,14 +414,16 @@
     }
 
     function newGame() {
+        gameState.gameWon = false;  
+        document.getElementById('win-message').style.display = 'none';
+        document.getElementById('new-game').textContent = 'Joc nou';  
         generateTiles();
         gameState.stepCounts = [3, 0, 2, 0, 2, 0, 3];
         gameState.moveCount = 0;
         updateMoveCounter();
         gameState.selectedTile = null;
 
-        renderSecretTiles(); // Render secret tiles once at the start of a new game
-
+        renderSecretTiles();
         console.clear();
         renderCurrentTiles();
 
@@ -417,10 +431,7 @@
     }
 
     document.getElementById('new-game').onclick = newGame;
-    document.getElementById('ok-button').onclick = () => {
-        document.getElementById('win-modal').style.display = 'none';
-        newGame();
-    };
+
     document.getElementById('tiles').onclick = handleTileClick;
 
     window.addEventListener('load', handleOrientationChange);
