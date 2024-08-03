@@ -365,9 +365,8 @@
                     stepCounts[stepCounts.length - 1] = 3;
                     swapsPerformed = true;
                     renderTiles();
-                    checkWin();
+                    
                 });
-                // return; // Exit after performing the swap
             }
 
             // Perform swap if stepCounts[2] === 0 and stepCounts[stepCounts.length - 3] === 0
@@ -378,15 +377,16 @@
                     stepCounts[stepCounts.length - 3] = 2;
                     swapsPerformed = true;
                     renderTiles();
-                    checkWin();
+                    
                 });
-                // return; // Exit after performing the swap
             }
 
-            // If no swap was performed, proceed to check for other cases
-            if (!swapsPerformed) {
-                // Additional logic if needed
-            }
+            checkWin();
+
+            // // If no swap was performed, proceed to check for other cases
+            // if (!swapsPerformed) {
+            //     // Additional logic if needed
+            // }
         }
 
 
