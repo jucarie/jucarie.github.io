@@ -195,40 +195,6 @@
             renderTileSet('secret-tiles', secretTiles, false);
         }
 
-        function renderTileSetBAK(containerId, tiles, clickable) {
-            const tilesContainer = document.getElementById(containerId);
-            tilesContainer.innerHTML = '';
-            tiles.forEach((color, index) => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.setAttribute('data-index', index);
-                
-                const tileInner = document.createElement('div');
-                tileInner.className = 'tile-inner';
-                tileInner.style.backgroundColor = color;
-
-                tile.appendChild(tileInner);
-
-                if (clickable) {
-                    if (index === 0 || index === 2 || index === tiles.length - 3 || index === tiles.length - 1) {
-                    tile.classList.add('tile-highlight');
-                    }
-
-                    tile.onclick = () => selectTile(tile);
-                    if (stepCounts[index] > 0) {
-                        const tileCount = document.createElement('div');
-                        tileCount.className = 'tile-count';
-
-                        const totalSteps = (index === 0 || index === tiles.length - 1) ? 3 : 2;
-                        tileCount.textContent = `${stepCounts[index]}/${totalSteps}`;
-                        tile.appendChild(tileCount);
-                    }
-                    tileInner.classList.remove('swap-left', 'swap-right');
-                }
-
-                tilesContainer.appendChild(tile);
-            });
-        }
 
         function renderTileSet(containerId, tiles, clickable) {
             const tilesContainer = document.getElementById(containerId);
@@ -263,41 +229,6 @@
             });
         }
 
-
-        function renderTileSetRAU(containerId, tiles, clickable) {
-            const tilesContainer = document.getElementById(containerId);
-            tilesContainer.innerHTML = '';
-            tiles.forEach((color, index) => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.setAttribute('data-index', index);
-                
-                const tileInner = document.createElement('div');
-                tileInner.className = 'tile-inner';
-                tileInner.style.backgroundColor = color;
-
-                tile.appendChild(tileInner);
-
-                if (clickable) {
-                    if (index === 0 || index === 2 || index === tiles.length - 3 || index === tiles.length - 1) {
-                    tile.classList.add('tile-highlight');
-                    }
-
-                    tile.onclick = () => selectTile(tile);
-                    if (index === 0 || index === 2 || index === tiles.length - 3 || index === tiles.length - 1) {
-                        const tileCount = document.createElement('div');
-                        tileCount.className = 'tile-count';
-
-                        const totalSteps = (index === 0 || index === tiles.length - 1) ? 3 : 2;
-                        tileCount.textContent = `${Math.max(stepCounts[index], 0)}/${totalSteps}`;
-                        tile.appendChild(tileCount);
-                    }
-                    tileInner.classList.remove('swap-left', 'swap-right');
-                }
-
-                tilesContainer.appendChild(tile);
-            });
-        }
 
         function selectTile(tile) {
             const index = parseInt(tile.getAttribute('data-index'));
@@ -359,7 +290,6 @@
 
             // Perform swap if stepCounts[0] === 0 and stepCounts[stepCounts.length - 1] === 0
             if (stepCounts[0] === 0 && stepCounts[stepCounts.length - 1] === 0) {
-                console.log(11111)
                 animateAutoSwap(0, stepCounts.length - 1, () => {
                     [currentTiles[0], currentTiles[stepCounts.length - 1]] = [currentTiles[stepCounts.length - 1], currentTiles[0]];
                     stepCounts[0] = 3;
@@ -372,7 +302,6 @@
 
             // Perform swap if stepCounts[2] === 0 and stepCounts[stepCounts.length - 3] === 0
             if (stepCounts[2] === 0 && stepCounts[stepCounts.length - 3] === 0) {
-                console.log(22222)
                 animateAutoSwap(2, stepCounts.length - 3, () => {
                     [currentTiles[2], currentTiles[stepCounts.length - 3]] = [currentTiles[stepCounts.length - 3], currentTiles[2]];
                     stepCounts[2] = 2;
@@ -382,47 +311,16 @@
                     
                 });
             }
-            console.log(33333)
-            checkWin();
+            setTimeout(() => {
+                checkWin();
+            })
 
             // // If no swap was performed, proceed to check for other cases
-            if (!swapsPerformed) {
-                checkWin();
-            }
+            // if (!swapsPerformed) {
+            //     pass
+            // }
         }
 
-
-
-        function checkAndPerformAutoSwapstest() {
-            let swapsPerformed = false;
-
-            if (stepCounts[0] === 0 && stepCounts[stepCounts.length - 1] === 0) {
-                animateAutoSwap(0, currentTiles.length - 1, () => {
-                    [currentTiles[0], currentTiles[currentTiles.length - 1]] = [currentTiles[currentTiles.length - 1], currentTiles[0]];
-                    stepCounts[0] = 3;
-                    stepCounts[stepCounts.length - 1] = 3;
-                    swapsPerformed = true;
-                    continueSwaps();
-                });
-            } else if (stepCounts[2] === 0 && stepCounts[stepCounts.length - 3] === 0) {
-                animateAutoSwap(2, currentTiles.length - 3, () => {
-                    [currentTiles[2], currentTiles[currentTiles.length - 3]] = [currentTiles[currentTiles.length - 3], currentTiles[2]];
-                    stepCounts[2] = 2;
-                    stepCounts[stepCounts.length - 3] = 2;
-                    swapsPerformed = true;
-                    continueSwaps();
-                });
-            } else {
-                continueSwaps();
-            }
-
-            function continueSwaps() {
-                if (swapsPerformed) {
-                    renderTiles();
-                    checkWin();
-                }
-            }
-        }
 
         function animateAutoSwap(index1, index2, callback) {
             const tile1 = document.querySelector(`#tiles .tile[data-index="${index1}"] .tile-inner`);
@@ -470,6 +368,8 @@
         }
 
         function checkWin() {
+            console.log(JSON.stringify(currentTiles))
+            console.log(JSON.stringify(secretTiles))
             if (JSON.stringify(currentTiles) === JSON.stringify(secretTiles)) {
                 document.querySelectorAll('#tiles .tile').forEach(tile => tile.onclick = null);
                 showModal();
