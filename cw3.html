@@ -44,12 +44,22 @@
         font-size: 18px;
     }
 
+    main111111 {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+    }
+
     main {
         flex-grow: 1;
         display: flex;
         flex-direction: column;
-        /* justify-content: center; */
+        justify-content: center;
         align-items: center;
+        padding: 10px; /* Add padding if needed */
+        box-sizing: border-box; /* Ensure padding is included in the width/height calculations */
     }
 
     #secret-tiles, #tiles {
@@ -105,7 +115,7 @@
 
     footer {
         text-align: center;
-        padding: 50px 0;
+        padding: 15vh 0;
     }
 
     button {
@@ -214,7 +224,7 @@
         </div>
         <div id="orientation-warning" class="modal">
             <div class="modal-content">
-                <p>Please rotate your device to landscape mode for the best experience.</p>
+                <p>Intoarce telefonul in modul "landscape" pentru o experienta mai buna.</p>
             </div>
         </div>
         <script>
