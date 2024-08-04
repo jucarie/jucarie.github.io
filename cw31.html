@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, orientation=landscape">
+    <title>Planetarium v0.4f beta</title>
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        touch-action: manipulation;
+        font-family: Arial, sans-serif;
+        background-color: #121212;
+        color: #fff;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    #game-container {
+        touch-action: manipulation;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px;
+    }
+
+    header {
+        text-align: center;
+        padding: 10px 0;
+    }
+
+    h1 {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    #move-counter {
+        font-size: 18px;
+    }
+
+    main {
+        touch-action: manipulation;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 10px; 
+        box-sizing: border-box;
+    }
+
+    #secret-tiles, #tiles {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 12px 0;
+    }
+
+    .tile {
+        width: 75px;
+        height: 75px;
+        margin: 0 10px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .tile-inner {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .tile-highlight {
+        border: 2px solid white;
+        padding: 5px;
+    }
+
+    .tile-count {
+        position: absolute;
+        bottom: -25px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 14px;
+    }
+
+    .tile.selected .tile-inner {
+        transform: scale(1.1);
+        box-shadow: 0 0 18px white;
+    }
+
+    .tile.adjacent .tile-inner {
+        box-shadow: 0 0 13px white;
+        opacity: 0.7;
+    }
+
+    #secret-tiles .tile {
+        width: 30px;
+        height: 30px;
+        margin: 0 5px;
+    }
+
+    footer {
+        text-align: center;
+        padding: 10vh 0;
+    }
+
+    button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+        background-color: #333;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #555;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+        background-color: #080d23;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #555;
+        width: 80%;
+        max-width: 300px;
+        text-align: center;
+        border-radius: 15px;
+    }
+
+    #ok-button {
+        margin-top: 15px;
+    }
+
+    #win-message {
+        display: none;
+        margin-top: 10px;
+        font-size: 18px;
+        color: #39ff14;
+        font-weight: bold;
+        text-shadow: 0 0 10px #39ff14;
+        animation: glow 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes swapLeft {
+        0% { transform: translateX(0); }
+        50% { transform: translateX(-70px); }
+        100% { transform: translateX(0); }
+    }
+
+    @keyframes swapRight {
+        0% { transform: translateX(0); }
+        50% { transform: translateX(70px); }
+        100% { transform: translateX(0); }
+    }
+
+    @keyframes fadeInOut {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
+    @keyframes glow {
+        from {
+            text-shadow: 0 0 5px #39ff14, 0 0 10px #39ff14, 0 0 15px #39ff14;
+        }
+        to {
+            text-shadow: 0 0 10px #39ff14, 0 0 20px #39ff14, 0 0 30px #39ff14;
+        }
+    }
+
+    .swap-left {
+        animation: swapLeft 0.5s ease-in-out, fadeInOut 0.5s ease-in-out;
+    }
+
+    .swap-right {
+        animation: swapRight 0.5s ease-in-out, fadeInOut 0.5s ease-in-out;
+    }
+
+    @media (orientation: portrait) {
+        #game-container {
+            display: none;
+        }
+        #orientation-warning {
+            display: block;
+        }
+    }
+
+    @media (orientation: landscape) {
+        #orientation-warning {
+            display: none;
+        }
+    }
+    </style>
+    </head>
+    <body>
+        <div id="game-container">
+            <header>
+                <h1>Planetarium v0.4f beta</h1>
+                <div id="move-counter">Mutari: <span id="move-count">0</span></div>
+                <div id="win-message">Ai castigat!</div>
+            </header>
+            <main>
+                <div id="secret-tiles"></div>
+                <div id="tiles"></div>
+            </main>
+            <footer>
+                <button id="new-game"></button>
+            </footer>
+        </div>
+        <div id="orientation-warning" class="modal">
+            <div class="modal-content">
+                <p>Intoarce telefonul in modul "landscape" pentru o experienta mai buna.</p>
+            </div>
+        </div>
+        <script>
+    const colors = ['#ff073a', 'blue', '#39ff14', 'yellow', '#9400ff', 'orange', 'pink'];
+    const blockCount = 7;
+    const animMiliSec = 500;
+
+    const gameState = {
+        currentTiles: [],
+        secretTiles: [],
+        moveCount: 0,
+        selectedTile: null,
+        stepCounts: [3, 0, 2, 0, 3, 0, 2],
+        gameWon: false  
+    };
+
+    function generateTiles() {
+        const availableColors = [...colors];
+        gameState.secretTiles = Array(blockCount).fill().map(() => {
+            const randomIndex = Math.floor(Math.random() * availableColors.length);
+            return availableColors.splice(randomIndex, 1)[0];
+        });
+        gameState.currentTiles = [...gameState.secretTiles];
+        shuffleArray(gameState.currentTiles);
+    }
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function renderCurrentTiles() {
+        const tilesContainer = document.getElementById('tiles');
+        tilesContainer.innerHTML = gameState.currentTiles.map((color, index) => `
+            <div class="tile ${(index === 0 || index === 2 || index === gameState.currentTiles.length - 3 || index === gameState.currentTiles.length - 1) ? 'tile-highlight' : ''}" data-index="${index}">
+                <div class="tile-inner" style="background-color: ${color}"></div>
+                ${gameState.stepCounts[index] > 0 ? `<div class="tile-count">${gameState.stepCounts[index]}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function renderSecretTiles() {
+        const secretTilesContainer = document.getElementById('secret-tiles');
+        secretTilesContainer.innerHTML = gameState.secretTiles.map(color => `
+            <div class="tile">
+                <div class="tile-inner" style="background-color: ${color}"></div>
+            </div>
+        `).join('');
+    }
+
+    function handleTileClick(e) {
+        if (gameState.gameWon) return; 
+
+        const tile = e.target.closest('.tile');
+        if (!tile) return;
+
+        const index = parseInt(tile.getAttribute('data-index'));
+        if (gameState.selectedTile === null) {
+            gameState.selectedTile = tile;
+            tile.classList.add('selected');
+            highlightAdjacentTiles(index);
+        } else {
+            const fromIndex = parseInt(gameState.selectedTile.getAttribute('data-index'));
+            if (fromIndex !== index && Math.abs(fromIndex - index) === 1) {
+                swapTiles(fromIndex, index);
+            }
+            clearHighlightAdjacentTiles(fromIndex);
+            gameState.selectedTile.classList.remove('selected');
+            gameState.selectedTile = null;
+        }
+    }
+
+    function highlightAdjacentTiles(index) {
+        const tiles = document.querySelectorAll('#tiles .tile');
+        if (index > 0) tiles[index - 1].classList.add('adjacent');
+        if (index < tiles.length - 1) tiles[index + 1].classList.add('adjacent');
+    }
+
+    function clearHighlightAdjacentTiles(index) {
+        const tiles = document.querySelectorAll('#tiles .tile');
+        if (index > 0) tiles[index - 1].classList.remove('adjacent');
+        if (index < tiles.length - 1) tiles[index + 1].classList.remove('adjacent');
+    }
+
+    function swapTiles(fromIndex, toIndex) {
+        disableTileClicks();
+        animateSwap(fromIndex, toIndex, () => {
+            [gameState.currentTiles[fromIndex], gameState.currentTiles[toIndex]] = [gameState.currentTiles[toIndex], gameState.currentTiles[fromIndex]];
+            gameState.moveCount++;
+            updateMoveCounter();
+            updateStepCounts();
+            renderCurrentTiles();
+            checkAndPerformAutoSwaps();
+        });
+    }
+
+    function animateSwap(index1, index2, callback) {
+        const tile1 = document.querySelector(`#tiles .tile[data-index="${index1}"] .tile-inner`);
+        const tile2 = document.querySelector(`#tiles .tile[data-index="${index2}"] .tile-inner`);
+
+        tile1.classList.add(index1 < index2 ? 'swap-right' : 'swap-left');
+        tile2.classList.add(index1 < index2 ? 'swap-left' : 'swap-right');
+
+        setTimeout(() => {
+            tile1.classList.remove('swap-right', 'swap-left');
+            tile2.classList.remove('swap-right', 'swap-left');
+            callback();
+            enableTileClicks();
+        }, animMiliSec);
+    }
+
+    function updateStepCounts() {
+        gameState.stepCounts = gameState.stepCounts.map(count => count > 0 ? count - 1 : count);
+    }
+
+    function checkAndPerformAutoSwaps() {
+        // const autoSwaps = [ //  [3, 0, 2, 0, 2, 0, 3];
+        //     { condition: gameState.stepCounts[0] === 0 && gameState.stepCounts[gameState.stepCounts.length - 1] === 0, indices: [0, gameState.stepCounts.length - 1], newCounts: [3, 3] },
+        //     { condition: gameState.stepCounts[2] === 0 && gameState.stepCounts[gameState.stepCounts.length - 3] === 0, indices: [2, gameState.stepCounts.length - 3], newCounts: [2, 2] }
+        // ];
+        const autoSwaps = [ // [3, 0, 2, 0, 3, 0, 2];
+            { condition: gameState.stepCounts[0] === 0 && gameState.stepCounts[gameState.stepCounts.length - 3] === 0, indices: [0, gameState.stepCounts.length - 3], newCounts: [3, 3] },
+            { condition: gameState.stepCounts[2] === 0 && gameState.stepCounts[gameState.stepCounts.length - 1] === 0, indices: [2, gameState.stepCounts.length - 1], newCounts: [2, 2] }
+        ];
+
+        let swapsPerformed = false;
+
+        autoSwaps.forEach(swap => {
+            if (swap.condition) {
+                swapsPerformed = true;
+                disableTileClicks();
+                animateSwap(swap.indices[0], swap.indices[1], () => {
+                    [gameState.currentTiles[swap.indices[0]], gameState.currentTiles[swap.indices[1]]] = [gameState.currentTiles[swap.indices[1]], gameState.currentTiles[swap.indices[0]]];
+                    swap.indices.forEach((index, i) => gameState.stepCounts[index] = swap.newCounts[i]);
+                });
+            }
+        });
+
+        if (swapsPerformed) {
+            setTimeout(() => {
+                renderCurrentTiles();
+                checkWin();
+                enableTileClicks();
+            }, animMiliSec);
+        } else {
+            checkWin();
+        }
+    }
+
+    function checkWin() {
+        if (JSON.stringify(gameState.currentTiles) === JSON.stringify(gameState.secretTiles)) {
+            gameState.gameWon = true;  
+            disableTileClicks();
+            document.getElementById('win-message').style.display = 'block';
+            document.getElementById('new-game').textContent = 'Joaca din nou'; 
+        }
+    }
+
+    function disableTileClicks() {
+        document.getElementById('tiles').onclick = null;
+    }
+
+    function enableTileClicks() {
+        if (!gameState.gameWon) {  // Only enable clicks if the game isn't won
+            document.getElementById('tiles').onclick = handleTileClick;
+        }
+    }
+
+    function updateMoveCounter() {
+        document.getElementById('move-count').textContent = gameState.moveCount;
+    }
+
+    function handleOrientationChange() {
+        if (window.orientation === 0 || window.orientation === 180) {
+            document.getElementById('orientation-warning').style.display = 'block';
+            document.getElementById('game-container').style.display = 'none';
+        } else {
+            document.getElementById('orientation-warning').style.display = 'none';
+            document.getElementById('game-container').style.display = 'flex';
+        }
+    }
+
+    function newGame() {
+        gameState.gameWon = false;  
+        document.getElementById('win-message').style.display = 'none';
+        document.getElementById('new-game').textContent = 'Joc nou';  
+        generateTiles();
+        gameState.stepCounts = [3, 0, 2, 0, 3, 0, 2];
+        gameState.moveCount = 0;
+        updateMoveCounter();
+        gameState.selectedTile = null;
+
+        renderSecretTiles();
+        console.clear();
+        renderCurrentTiles();
+
+        enableTileClicks();
+    }
+
+    document.getElementById('new-game').onclick = newGame;
+
+    document.getElementById('tiles').onclick = handleTileClick;
+
+    window.addEventListener('load', handleOrientationChange);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.onload = newGame;
+    </script>
+</body>
+</html>
